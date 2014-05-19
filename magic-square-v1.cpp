@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <math.h>
+#include <list>
 
 // http://en.wikipedia.org/wiki/Sieve_of_Atkin
 
@@ -28,6 +29,12 @@
 
 using namespace std;
 
+/**
+ * find prime numbers in a range between [2,limit]
+ * 
+ * @param limit upper limit
+ * @param is_prime return a array[limit+1] with a representation of number (if is_prime[n] == true then n is prime, false otherwise)
+ */
 void find_prime_numbers(int limit, bool *is_prime){
   int sqrt_limit = ceil(sqrt(limit));
 
@@ -65,12 +72,38 @@ void find_prime_numbers(int limit, bool *is_prime){
   return;
 }
 
+/**
+ * Convert the prime numbers representation: 
+ *   from: if is_prime[n] == true then n is prime, false otherwise
+ *   to  : list of prime numbers
+ * 
+ * @param is_prime the array in input
+ * @param limit the size of array is_prime
+ * @param primes the output array
+ */
+void is_prime2primes(bool *is_prime, int limit, std::list<int> *primes){
+  for(int n=0; n<=limit; n++){
+    if(is_prime[n]){
+      primes->push_back(n);
+    }
+  }
+}
+
 int main(int argc, char *argv[]){
-  int limit = 100000;
+  int limit = 100;//000;
   bool is_prime[limit + 1];
   find_prime_numbers(limit, is_prime);
-  for(int n=0; n<=limit; n++){
+/*  for(int n=0; n<=limit; n++){
     if(is_prime[n]) cout << n << "\n";
   }
+*/
+  std::list<int> primes;
+  is_prime2primes(is_prime, limit, &primes);
+
+  for(std::list<int>::iterator i = primes.begin(); 
+    i != primes.end(); i++){
+    std::cout<<*i<<endl;
+  }
+
   return 0;
 }
