@@ -17,5 +17,5 @@
  *
  */
 
-Implementation of different algorith with OpenMP and MPI (more o less optimized) to find magic square composed of prime numbers.
+Implementation of different algorithms with OpenMP and MPI (more o less optimized) to find magic squares composed of prime numbers.
 Enjoy it.. ;)
