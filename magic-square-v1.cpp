@@ -31,11 +31,14 @@
 
 using namespace std;
 
+typedef vector<int> ms_vector;
+typedef vector<vector<int> > ms_matrix;
+
 /**
  * Print a vector
  */
-void print_vector(vector<int> vector) {
-	for (std::vector<int>::iterator i = vector.begin(); i != vector.end();
+void print_vector(ms_vector vector) {
+	for (ms_vector::iterator i = vector.begin(); i != vector.end();
 			i++) {
 		std::cout << *i << "\t";
 	}
@@ -45,8 +48,8 @@ void print_vector(vector<int> vector) {
 /**
  * Print a matrix
  */
-void print_matrix(vector<vector<int> > matrix) {
-	for (std::vector<vector<int> >::iterator i = matrix.begin();
+void print_matrix(ms_matrix matrix) {
+	for (ms_matrix::iterator i = matrix.begin();
 			i != matrix.end(); i++) {
 		print_vector(*i);
 	}
@@ -107,7 +110,7 @@ void find_prime_numbers(int limit, bool *is_prime) {
  * @param limit the size of array is_prime
  * @param primes the output array
  */
-void is_prime2primes(bool *is_prime, int limit, std::vector<int> *primes) {
+void is_prime2primes(bool *is_prime, int limit, ms_vector *primes) {
 	for (int n = 0; n <= limit; n++) {
 		if (is_prime[n]) {
 			primes->push_back(n);
@@ -115,23 +118,41 @@ void is_prime2primes(bool *is_prime, int limit, std::vector<int> *primes) {
 	}
 }
 
-void fill_random_matrix(std::vector<int> *primes,
-		vector<vector<int> > *matrix) {
+void fill_random_matrix(ms_vector *primes,
+		ms_matrix *matrix) {
 	// init random generator
 	// TODO fix random generator! T_T
 //	std::default_random_engine generator;
 //	std::uniform_real_distribution<double> distribution(0.0, primes->size());
 	srand(time(NULL) + rand());
 
-	for (int i = 0; i < matrix->size(); i++)
+	for (int i = 0; i < matrix->size(); i++) {
 		for (int j = 0; j < matrix->size(); j++) {
 //			int x = (int)distribution(generator);
 			int x = (int) (rand() % primes->size());
 			(*matrix)[i][j] = (*primes)[x];
 		}
+	}
 }
 
-bool is_magic_square(vector<vector<int> > *matrix) {
+void fill_with_consecutive(ms_vector *primes,
+		ms_matrix *matrix) {
+	// TODO fix random generator! T_T
+	srand(time(NULL) + rand());
+	int x = (int) (rand() % primes->size());
+
+	(*matrix)[0][0] = (*primes)[x-1];
+	(*matrix)[0][1] = (*primes)[x+1];
+	(*matrix)[0][2] = (*primes)[x-2];
+	(*matrix)[1][0] = (*primes)[x+2];
+	(*matrix)[1][1] = (*primes)[x];
+	(*matrix)[1][2] = (*primes)[x-3];
+	(*matrix)[2][0] = (*primes)[x+3];
+	(*matrix)[2][1] = (*primes)[x-4];
+	(*matrix)[2][2] = (*primes)[x+4];
+}
+
+bool is_magic_square(ms_matrix *matrix) {
 	// test diagonal
 	int tot = (*matrix)[0][0] + (*matrix)[1][1] + (*matrix)[2][2];
 	if (tot != ((*matrix)[2][0] + (*matrix)[1][1] + (*matrix)[0][2]))
@@ -156,15 +177,18 @@ bool is_magic_square(vector<vector<int> > *matrix) {
  *
  * @param primes array of prime numbers
  */
-bool explorer_strategy(std::vector<int> *primes, vector<vector<int> > *matrix) {
+bool explorer_strategy(ms_vector *primes, ms_matrix *matrix) {
 	fill_random_matrix(primes, matrix);
 	return is_magic_square(matrix);
 }
 
-// temporary debug
-#include "tests.cpp"
-
-int main(int argc, char *argv[]) {
-	test_05();
-	return 0;
+/**
+ * In this approach the matrix elements are taken at random and
+ * repeating primes within the matrix is allowed.
+ *
+ * @param primes array of prime numbers
+ */
+bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix) {
+	fill_with_consecutive(primes, matrix);
+	return is_magic_square(matrix);
 }
