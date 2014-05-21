@@ -157,9 +157,6 @@ void test_07() {
 	ms_vector primes;
 	is_prime2primes(is_prime, limit, &primes);
 
-	int length = 3;
-	ms_matrix matrix(length, ms_vector(length));
-
 	vector<ms_matrix> list;
 
 	for (int i = 0; i < 10; i++) {
@@ -178,7 +175,98 @@ void test_07() {
 	print_list_matrix(list);
 }
 
+/**
+ * test if exists a another trio of prime numbers that satisfy the restriction: the sum.
+ * 1) select randomly first 3 prime numbers and a+b+c = sum
+ * 2) look if exists other 3 prime numbers that x+y+z = sum = a+b+c
+ */
+void test_08() {
+	int limit = 100000;
+	bool is_prime[limit + 1];
+	// find the prime numbers
+	find_prime_numbers(limit, is_prime);
+
+	// convert the data structure in a vector
+	ms_vector primes;
+	is_prime2primes(is_prime, limit, &primes);
+
+	ms_matrix matrix(3, ms_vector(3));
+
+	for (int i = 0; i < 100; i++) {
+		srand(time(NULL) + rand());
+
+		// select randomly first 3 prime numbers
+		int seed_00 = (int) (rand() % primes.size());
+		int seed_01 = (int) (rand() % primes.size());
+		int seed_02 = (int) (rand() % primes.size());
+
+		// save first column
+		matrix[0][0] = primes[seed_00];
+		matrix[0][1] = primes[seed_01];
+		matrix[0][2] = primes[seed_02];
+
+		// compute the sum
+		int sum = matrix[0][0] + matrix[0][1] + matrix[0][2];
+
+		cout << matrix[0][0] << "\t+ " << matrix[0][1] << "\t+ " << matrix[0][2]
+				<< "\t = " << sum << " (prime numbers selected) " << endl;
+
+		vector<int> not2consider;
+		// list of index of prime numbers not to be considered in search
+		not2consider.push_back(seed_00);
+		not2consider.push_back(seed_01);
+		not2consider.push_back(seed_02);
+
+		int first, first_position, second, second_position;
+
+		if (look_for_couple_prime_with_condition(&primes, sum - matrix[0][0],
+				not2consider, first, first_position, second, second_position)) {
+			cout << first << "\t + " << second << "\t + " << matrix[0][0]
+					<< "\t = " << (matrix[0][0] + first + second)
+					<< "\t position: (" << first_position << ","
+					<< second_position << ")" << endl;
+		}
+	}
+
+}
+
+/**
+ * Heuristic strategy:
+ * Select randomly the first column, then I look for
+ * the others cells as consequence of this selection.
+ * @strategy
+ */
+void test_09() {
+	int limit = 100000;
+	bool is_prime[limit + 1];
+	find_prime_numbers(limit, is_prime);
+
+	ms_vector primes;
+	is_prime2primes(is_prime, limit, &primes);
+
+	vector<ms_matrix> list;
+
+	for (int i = 0; i < 10; i++) {
+		int length = 3;
+		ms_matrix matrix(length, ms_vector(length));
+
+		if (heuristic_strategy(&primes, &matrix)) {
+			cout << "Found a magic square!\n";
+			print_matrix(matrix);
+		}
+
+		list.push_back(matrix);
+	}
+
+	// print all generated matrix
+	cout << "print matrix:\n";
+	print_list_matrix(list);
+}
+
 int main(int argc, char *argv[]) {
-	test_07();
+	test_09();
+//	int length = 3;
+//	ms_matrix matrix(length, ms_vector(length));
+//	print_matrix(matrix);
 	return 0;
 }
