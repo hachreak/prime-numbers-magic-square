@@ -97,7 +97,8 @@ void test_04() {
 }
 
 /**
- * test first strategy: explorer_strategy()
+ * test first strategy: explorer_strategy() + print generated matrix
+ * @strategy
  */
 void test_05() {
 	int limit = 100000;
@@ -107,18 +108,28 @@ void test_05() {
 	ms_vector primes;
 	is_prime2primes(is_prime, limit, &primes);
 
-	//vector<vector<int> > *matrix;
+	vector<ms_matrix> list;
 
-	for (int i = 0; i < 100000000; i++) {
+	for (int i = 0; i < 10; i++) {
 		int length = 3;
 		ms_matrix matrix(length, ms_vector(length));
 
 		if (explorer_strategy(&primes, &matrix)) {
+			cout << "Found a magic square!\n";
 			print_matrix(matrix);
 		}
+
+		list.push_back(matrix);
 	}
+
+	// print all generated matrix
+	cout << "print matrix:\n";
+	print_list_matrix(list);
 }
 
+/**
+ * generate a consecutive matrix and view
+ */
 void test_06() {
 	int limit = 100000;
 	bool is_prime[limit + 1];
@@ -134,6 +145,10 @@ void test_06() {
 	print_matrix(matrix);
 }
 
+/**
+ * Test consecutive_strategy + view generated matrix
+ * @strategy
+ */
 void test_07() {
 	int limit = 100000;
 	bool is_prime[limit + 1];
@@ -145,14 +160,22 @@ void test_07() {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	for (int i = 0; i < 100000000; i++) {
+	vector<ms_matrix> list;
+
+	for (int i = 0; i < 10; i++) {
 		int length = 3;
 		ms_matrix matrix(length, ms_vector(length));
 
 		if (consecutive_strategy(&primes, &matrix)) {
+			cout << "Found a magic square!\n";
 			print_matrix(matrix);
 		}
+		list.push_back(matrix);
 	}
+
+	// print all generated matrix
+	cout << "print matrix:\n";
+	print_list_matrix(list);
 }
 
 int main(int argc, char *argv[]) {

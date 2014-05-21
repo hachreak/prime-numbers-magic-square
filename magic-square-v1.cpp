@@ -56,6 +56,18 @@ void print_matrix(ms_matrix matrix) {
 }
 
 /**
+ * Print a list of matrixs
+ */
+void print_list_matrix(vector<ms_matrix> list){
+	// print all generated matrix
+		for (vector<ms_matrix>::iterator i = list.begin(); i != list.end();
+					i++) {
+				print_matrix(*i);
+				cout<<endl;
+			}
+}
+
+/**
  * find prime numbers in a range between [2,limit]
  * 
  * @param limit upper limit
