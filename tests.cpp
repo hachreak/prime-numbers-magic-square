@@ -39,19 +39,20 @@
  * transform is_prime to primes
  */
 void test_02() {
-	// 
 	int limit = 100;
+	cout<<"Find prime numbers.... [2,"<<limit<<"]\n";
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
 
 	print_vector(primes);
+	cout<<"\n";
 }
 
 /**
  * get random matrix of prime numbers
  */
 void test_03() {
-	// 
+	cout<<"Fill a matrix with random prime numbers...\n";
 	int limit = 100;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -62,6 +63,7 @@ void test_03() {
 	fill_random_matrix(&primes, &matrix);
 	print_matrix(matrix);
 
+	cout<<"\n";
 	ms_matrix matrix2(length, ms_vector(length));
 	fill_random_matrix(&primes, &matrix2);
 	print_matrix(matrix2);
@@ -71,6 +73,7 @@ void test_03() {
  * test function is_magic_square()
  */
 void test_04() {
+	cout<< "Test if identify correctly a magic square....\n";
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
@@ -84,10 +87,12 @@ void test_04() {
 	matrix[2][1] = 13;
 	matrix[2][2] = 67;
 
+	print_matrix(matrix);
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
 
 	matrix[2][2] = 4;
 
+	print_matrix(matrix);
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
 }
 
@@ -96,6 +101,7 @@ void test_04() {
  * @strategy
  */
 void test_05() {
+	cout<<"Explorer strategy...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -123,6 +129,7 @@ void test_05() {
  * generate a consecutive matrix and view
  */
 void test_06() {
+	cout<<"Generate a consecutive matrix and view...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -139,6 +146,7 @@ void test_06() {
  * @strategy
  */
 void test_07() {
+	cout<<"Test consecutive strategy...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -157,7 +165,7 @@ void test_07() {
 	}
 
 	// print all generated matrix
-	cout << "print matrix:\n";
+	cout << "Print all generated matrix:\n";
 	print_list_matrix(list);
 }
 
@@ -167,6 +175,7 @@ void test_07() {
  * 2) look if exists other 3 prime numbers that x+y+z = sum = a+b+c
  */
 void test_08() {
+	cout<<"Test if found a trio of prime numbers that satisfy the condition A+B+C=SUM, where you know A and SUM...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -218,6 +227,7 @@ void test_08() {
  * @strategy
  */
 void test_09() {
+	cout<<"Test the heuristic strategy...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -237,7 +247,7 @@ void test_09() {
 	}
 
 	// print all generated matrix
-	cout << "print matrix:\n";
+	cout << "Print all generated matrix:\n";
 	print_list_matrix(list);
 }
 
