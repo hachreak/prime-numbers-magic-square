@@ -66,14 +66,33 @@ void print_list_matrix(vector<ms_matrix> list) {
 }
 
 /**
+ * Convert the prime numbers representation:
+ *   from: if is_prime[n] == true then n is prime, false otherwise
+ *   to  : list of prime numbers
+ *
+ * @param is_prime the array in input
+ * @param limit the size of array is_prime
+ * @param primes the output array
+ */
+void is_prime2primes(bool *is_prime, int limit, ms_vector *primes) {
+	for (int n = 0; n <= limit; n++) {
+		if (is_prime[n]) {
+			primes->push_back(n);
+		}
+	}
+}
+
+/**
  * find prime numbers in a range between [2,limit]
  * 
  * @param limit upper limit
  * @param is_prime return a array[limit+1] with a representation of number (if is_prime[n] == true then n is prime, false otherwise)
  */
-void find_prime_numbers(int limit, bool *is_prime) {
+void find_prime_numbers(int limit, ms_vector *primes) {
 	int sqrt_limit = ceil(sqrt(limit));
+	bool is_prime[limit+1];
 
+	// init vector
 	for (int i = 0; i < (limit + 1); i++) {
 		is_prime[i] = false;
 	}
@@ -108,24 +127,8 @@ void find_prime_numbers(int limit, bool *is_prime) {
 		}
 	}
 
-	return;
-}
-
-/**
- * Convert the prime numbers representation: 
- *   from: if is_prime[n] == true then n is prime, false otherwise
- *   to  : list of prime numbers
- * 
- * @param is_prime the array in input
- * @param limit the size of array is_prime
- * @param primes the output array
- */
-void is_prime2primes(bool *is_prime, int limit, ms_vector *primes) {
-	for (int n = 0; n <= limit; n++) {
-		if (is_prime[n]) {
-			primes->push_back(n);
-		}
-	}
+	// convert the structure in a array with inside only the prime numbers
+	is_prime2primes(is_prime, limit, primes);
 }
 
 /**

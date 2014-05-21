@@ -23,28 +23,26 @@
 /**
  * find first 100 prime numbers: print array is_prime
  */
-void test_01() {
-	//
-	int limit = 100;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-	for (int n = 0; n <= limit; n++) {
-		if (is_prime[n])
-			cout << n << "\n";
-	}
-}
-
+//void test_01() {
+//	//
+//	int limit = 100;
+//
+//	find_prime_numbers(limit, is_prime);
+//	//cout<<sizeof(is_prime);exit(0);
+//	for (int n = 0; n <= limit; n++) {
+//		if (is_prime[n])
+//			cout << n << "\n";
+//	}
+//	exit(0);
+//}
 /**
  * transform is_prime to primes
  */
 void test_02() {
 	// 
 	int limit = 100;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	print_vector(primes);
 }
@@ -55,11 +53,8 @@ void test_02() {
 void test_03() {
 	// 
 	int limit = 100;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	int length = 3;
 
@@ -102,11 +97,8 @@ void test_04() {
  */
 void test_05() {
 	int limit = 100000;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	vector<ms_matrix> list;
 
@@ -132,11 +124,8 @@ void test_05() {
  */
 void test_06() {
 	int limit = 100000;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
@@ -151,11 +140,8 @@ void test_06() {
  */
 void test_07() {
 	int limit = 100000;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	vector<ms_matrix> list;
 
@@ -182,17 +168,12 @@ void test_07() {
  */
 void test_08() {
 	int limit = 100000;
-	bool is_prime[limit + 1];
-	// find the prime numbers
-	find_prime_numbers(limit, is_prime);
-
-	// convert the data structure in a vector
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	ms_matrix matrix(3, ms_vector(3));
 
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 10; i++) {
 		srand(time(NULL) + rand());
 
 		// select randomly first 3 prime numbers
@@ -238,11 +219,8 @@ void test_08() {
  */
 void test_09() {
 	int limit = 100000;
-	bool is_prime[limit + 1];
-	find_prime_numbers(limit, is_prime);
-
 	ms_vector primes;
-	is_prime2primes(is_prime, limit, &primes);
+	find_prime_numbers(limit, &primes);
 
 	vector<ms_matrix> list;
 
@@ -264,6 +242,14 @@ void test_09() {
 }
 
 int main(int argc, char *argv[]) {
+//s	test_01();
+	test_02();
+	test_03();
+	test_04();
+	test_05();
+	test_06();
+	test_07();
+	test_08();
 	test_09();
 //	int length = 3;
 //	ms_matrix matrix(length, ms_vector(length));
