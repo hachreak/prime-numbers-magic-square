@@ -19,6 +19,7 @@
 
 // temporary debug
 #include "magic-square-v1.cpp"
+#include <assert.h>
 
 /**
  * find first 100 prime numbers: print array is_prime
@@ -91,6 +92,12 @@ void test_04() {
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
 
 	matrix[2][2] = 4;
+
+	print_matrix(matrix);
+	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+
+	matrix[2][2] = 67;
+	matrix[1][1] = 38;
 
 	print_matrix(matrix);
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
@@ -180,6 +187,39 @@ void test_08() {
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
 
+//	ms_matrix seed(10, ms_vector(3));
+
+//	seed[0][0] = 8857;
+//	seed[0][1] = 1417;
+//	seed[0][2] = 1929;
+//	seed[1][0] = 6607;
+//	seed[1][1] = 3980;
+//	seed[1][2] = 7989;
+//	seed[2][0] = 2164;
+//	seed[2][1] = 7916;
+//	seed[2][2] = 2584;
+//	seed[3][0] = 1072;
+//	seed[3][1] = 4351;
+//	seed[3][2] = 2396;
+//	seed[4][0] = 6047;
+//	seed[4][1] = 8059;
+//	seed[4][2] = 3194;
+//	seed[5][0] = 3093;
+//	seed[5][1] = 7599;
+//	seed[5][2] = 5406;
+//	seed[6][0] = 5928;
+//	seed[6][1] = 603;
+//	seed[6][2] = 1596;
+//	seed[7][0] = 9384;
+//	seed[7][1] = 4384;
+//	seed[7][2] = 5584;
+//	seed[8][0] = 4490;
+//	seed[8][1] = 7482;
+//	seed[8][2] = 3985;
+//	seed[9][0] = 8384;
+//	seed[9][1] = 3556;
+//	seed[9][2] = 2843;
+
 	ms_matrix matrix(3, ms_vector(3));
 
 	for (int i = 0; i < 10; i++) {
@@ -189,6 +229,10 @@ void test_08() {
 		int seed_00 = (int) (rand() % primes.size());
 		int seed_01 = (int) (rand() % primes.size());
 		int seed_02 = (int) (rand() % primes.size());
+
+//cout<< "seed["<<i<<"][0] = "<<seed_00<<";\n";
+//cout<< "seed["<<i<<"][1] = "<<seed_01<<";\n";
+//cout<< "seed["<<i<<"][2] = "<<seed_02<<";\n";
 
 		// save first column
 		matrix[0][0] = primes[seed_00];
@@ -211,10 +255,13 @@ void test_08() {
 
 		if (look_for_couple_prime_with_condition(&primes, sum - matrix[0][0],
 				not2consider, first, first_position, second, second_position)) {
+
 			cout << first << "\t + " << second << "\t + " << matrix[0][0]
 					<< "\t = " << (matrix[0][0] + first + second)
 					<< "\t position: (" << first_position << ","
 					<< second_position << ")" << endl;
+
+				assert((first + second + matrix[0][0]) == (matrix[0][0] + matrix[0][1] + matrix[0][2]));
 		}
 	}
 
@@ -244,6 +291,15 @@ void test_09() {
 		}
 
 		list.push_back(matrix);
+		assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
+		assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
+		assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
+
+		for(int j=0; j<matrix.size(); j++){
+			for(int z=0; z<matrix.size(); z++){
+				assert(matrix[j][z] != 0);
+			}
+		}
 	}
 
 	// print all generated matrix
@@ -252,6 +308,8 @@ void test_09() {
 }
 
 int main(int argc, char *argv[]) {
+	//MPI_Init(&argc, &argv);
+
 //s	test_01();
 	test_02();
 	test_03();
@@ -264,5 +322,8 @@ int main(int argc, char *argv[]) {
 //	int length = 3;
 //	ms_matrix matrix(length, ms_vector(length));
 //	print_matrix(matrix);
+
+//    MPI_Finalize();
+
 	return 0;
 }
