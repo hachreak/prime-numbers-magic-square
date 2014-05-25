@@ -18,7 +18,7 @@
  */
 
 // temporary debug
-#include "magic-square-v1.cpp"
+#include "magic-square.cpp"
 #include <assert.h>
 
 /**
@@ -365,18 +365,21 @@ void test_10(mpi::communicator world) {
 	}
 }
 
+/**
+ * Test fill a matrix with heu
+ */
 void test_11(mpi::communicator world, int limit) {
 	if (world.rank() == 0) {
 		int seed = 1;
 
-		cout << "Test fill in heuristic strategy v1...\n";
+		cout << "Test fill in heuristic strategy v2...\n";
 
 		ms_vector primes;
 		find_prime_numbers(limit, &primes);
 
 		ms_matrix matrix(3, ms_vector(3));
 
-		fill_in_heuristic_mode_1(&primes, &matrix, seed);
+		fill_in_heuristic_mode_2(&primes, &matrix, seed);
 
 		print_matrix(matrix);
 	}
@@ -428,8 +431,6 @@ void test_12(mpi::communicator world, int limit) {
 }
 
 int main(int argc, char *argv[]) {
-	int size, rank;
-
 	mpi::environment env(argc, argv);
 	mpi::communicator world;
 
