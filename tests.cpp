@@ -39,79 +39,87 @@
 /**
  * transform is_prime to primes
  */
-void test_02() {
-	int limit = 100;
-	cout << "Find prime numbers.... [2," << limit << "]\n";
-	ms_vector primes;
-	find_prime_numbers(limit, &primes);
+void test_02(mpi::communicator world) {
+	if (world.rank() == 0) {
+		int limit = 100;
+		cout << "Find prime numbers.... [2," << limit << "]\n";
+		ms_vector primes;
+		find_prime_numbers(limit, &primes);
 
-	print_vector(primes);
-	cout << "\n";
+		print_vector(primes);
+		cout << "\n";
+	}
+	world.barrier();
 }
 
 /**
  * get random matrix of prime numbers
  */
-void test_03() {
-	cout << "Fill a matrix with random prime numbers...\n";
-	int limit = 100;
-	ms_vector primes;
-	find_prime_numbers(limit, &primes);
+void test_03(mpi::communicator world) {
+	if (world.rank() == 0) {
+		cout << "Fill a matrix with random prime numbers...\n";
+		int limit = 100;
+		ms_vector primes;
+		find_prime_numbers(limit, &primes);
 
-	int length = 3;
+		int length = 3;
 
-	ms_matrix matrix(length, ms_vector(length));
-	fill_random_matrix(&primes, &matrix, 3);
-	ms_matrix matrix2(length, ms_vector(length));
-	fill_random_matrix(&primes, &matrix2, 6);
+		ms_matrix matrix(length, ms_vector(length));
+		fill_random_matrix(&primes, &matrix, 3);
+		ms_matrix matrix2(length, ms_vector(length));
+		fill_random_matrix(&primes, &matrix2, 6);
 
-	print_matrix(matrix);
-	cout << "\n";
-	print_matrix(matrix2);
+		print_matrix(matrix);
+		cout << "\n";
+		print_matrix(matrix2);
+	}
+	world.barrier();
 }
 
 /**
  * test function is_magic_square()
  */
-void test_04() {
-	cout << "Test if identify correctly a magic square....\n";
-	int length = 3;
-	ms_matrix matrix(length, ms_vector(length));
+void test_04(mpi::communicator world) {
+	if (world.rank() == 0) {
+		cout << "Test if identify correctly a magic square....\n";
+		int length = 3;
+		ms_matrix matrix(length, ms_vector(length));
 
-	matrix[0][0] = 7;
-	matrix[0][1] = 61;
-	matrix[0][2] = 43;
-	matrix[1][0] = 73;
-	matrix[1][1] = 37;
-	matrix[1][2] = 1;
-	matrix[2][0] = 31;
-	matrix[2][1] = 13;
-	matrix[2][2] = 67;
+		matrix[0][0] = 7;
+		matrix[0][1] = 61;
+		matrix[0][2] = 43;
+		matrix[1][0] = 73;
+		matrix[1][1] = 37;
+		matrix[1][2] = 1;
+		matrix[2][0] = 31;
+		matrix[2][1] = 13;
+		matrix[2][2] = 67;
 
-	print_matrix(matrix);
-	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-	assert(is_magic_square(&matrix));
+		print_matrix(matrix);
+		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+		assert(is_magic_square(&matrix));
 
-	matrix[2][2] = 4;
+		matrix[2][2] = 4;
 
-	print_matrix(matrix);
-	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-	assert(!is_magic_square(&matrix));
+		print_matrix(matrix);
+		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(&matrix));
 
-	matrix[2][2] = 67;
-	matrix[1][1] = 38;
+		matrix[2][2] = 67;
+		matrix[1][1] = 38;
 
-	print_matrix(matrix);
-	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-	assert(!is_magic_square(&matrix));
+		print_matrix(matrix);
+		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(&matrix));
 
-	matrix[1][1] = 36;
-	matrix[1][2] = 0;
+		matrix[1][1] = 36;
+		matrix[1][2] = 0;
 
-	print_matrix(matrix);
-	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-	assert(!is_magic_square(&matrix));
-
+		print_matrix(matrix);
+		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(&matrix));
+	}
+	world.barrier();
 }
 
 /**
@@ -239,7 +247,7 @@ void test_08(mpi::communicator world, int limit) {
 	int seed_01 = (int) (rand() % primes.size());
 	int seed_02 = (int) (rand() % primes.size());
 
-    // save first column
+	// save first column
 	matrix[0][0] = primes[seed_00];
 	matrix[0][1] = primes[seed_01];
 	matrix[0][2] = primes[seed_02];
@@ -319,17 +327,7 @@ void test_09(mpi::communicator world, int limit) {
 		print_matrix(matrix);
 	}
 
-	// test the correctness of the matrix
-//	assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
-//	assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
-//	assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
-//	for (int j = 0; j < matrix.size(); j++) {
-//		for (int z = 0; z < matrix.size(); z++) {
-//			assert(matrix[j][z] != 0);
-//		}
-//	}
-
-// receive all generated matrix
+	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
 
 	if (rank == 0) {
@@ -367,20 +365,21 @@ void test_10(mpi::communicator world) {
 	}
 }
 
-void test_11() {
-	int seed = 1;
+void test_11(mpi::communicator world, int limit) {
+	if (world.rank() == 0) {
+		int seed = 1;
 
-	cout << "Test fill in heuristic strategy v2...\n";
+		cout << "Test fill in heuristic strategy v1...\n";
 
-	int limit = 100000;
-	ms_vector primes;
-	find_prime_numbers(limit, &primes);
+		ms_vector primes;
+		find_prime_numbers(limit, &primes);
 
-	ms_matrix matrix(3, ms_vector(3));
+		ms_matrix matrix(3, ms_vector(3));
 
-	fill_in_heuristic_mode_1(&primes, &matrix, seed);
+		fill_in_heuristic_mode_1(&primes, &matrix, seed);
 
-	print_matrix(matrix);
+		print_matrix(matrix);
+	}
 }
 
 /**
@@ -418,17 +417,7 @@ void test_12(mpi::communicator world, int limit) {
 		print_matrix(matrix);
 	}
 
-	// test the correctness of the matrix
-//	assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
-//	assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
-//	assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
-//	for (int j = 0; j < matrix.size(); j++) {
-//		for (int z = 0; z < matrix.size(); z++) {
-//			assert(matrix[j][z] != 0);
-//		}
-//	}
-
-// receive all generated matrix
+	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
 
 	if (rank == 0) {
@@ -446,21 +435,17 @@ int main(int argc, char *argv[]) {
 
 	int limit = 100000;
 
-// 	test_01();
-//	test_02();
-//	test_03();
-//	test_04();
-//	test_05(world, limit);
-//	test_06(world, limit);
-//	test_07(world, limit);
+	test_02(world);
+	test_03(world);
+	test_04(world);
+	test_05(world, limit);
+	test_06(world, limit);
+	test_07(world, limit);
 	test_08(world, limit);
-//    test_09(world, limit);
-//    test_10(world);
-//	test_11();
-//	test_12(world, limit);
-//	int length = 3;
-//	ms_matrix matrix(length, ms_vector(length));
-//	print_matrix(matrix);
+	test_09(world, limit);
+	test_10(world);
+	test_11(world, limit);
+	test_12(world, limit);
 
 	return 0;
 }
