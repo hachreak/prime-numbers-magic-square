@@ -179,6 +179,8 @@ void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix) {
 	srand(time(NULL) + rand());
 	int seed = (int) (rand() % primes->size());
 
+#pragma omp parallel sections
+{
 #   pragma omp section
 	{
 		(*matrix)[0][0] = (*primes)[seed - 1];
@@ -195,6 +197,7 @@ void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix) {
 		(*matrix)[2][1] = (*primes)[seed - 4];
 		(*matrix)[2][2] = (*primes)[seed + 4];
 	}
+}
 }
 
 /**
@@ -342,6 +345,8 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 
 	bool ret = true;
 
+#pragma omp parallel sections
+{
 #   pragma omp section
 	{
 		// compute
@@ -388,7 +393,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 				== primes->end())
 			ret = false;
 	}
-
+}
 	return ret;
 }
 
