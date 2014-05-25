@@ -179,15 +179,22 @@ void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix) {
 	srand(time(NULL) + rand());
 	int seed = (int) (rand() % primes->size());
 
-	(*matrix)[0][0] = (*primes)[seed - 1];
-	(*matrix)[0][1] = (*primes)[seed + 1];
-	(*matrix)[0][2] = (*primes)[seed - 2];
-	(*matrix)[1][0] = (*primes)[seed + 2];
-	(*matrix)[1][1] = (*primes)[seed];
-	(*matrix)[1][2] = (*primes)[seed - 3];
-	(*matrix)[2][0] = (*primes)[seed + 3];
-	(*matrix)[2][1] = (*primes)[seed - 4];
-	(*matrix)[2][2] = (*primes)[seed + 4];
+#   pragma omp section
+	{
+		(*matrix)[0][0] = (*primes)[seed - 1];
+		(*matrix)[0][1] = (*primes)[seed + 1];
+		(*matrix)[0][2] = (*primes)[seed - 2];
+		(*matrix)[1][0] = (*primes)[seed + 2];
+	}
+
+#   pragma omp section
+	{
+		(*matrix)[1][1] = (*primes)[seed];
+		(*matrix)[1][2] = (*primes)[seed - 3];
+		(*matrix)[2][0] = (*primes)[seed + 3];
+		(*matrix)[2][1] = (*primes)[seed - 4];
+		(*matrix)[2][2] = (*primes)[seed + 4];
+	}
 }
 
 /**
@@ -310,47 +317,79 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 	// TODO fix random generator! T_T
 	srand(time(NULL) + rand() + seed);
 
-	// select randomly first 3 prime numbers
+	// select randomly  prime number
 	int seed_00 = (int) (rand() % primes->size());
-	int seed_01 = (int) (rand() % primes->size());
-	int seed_02 = (int) (rand() % primes->size());
-	int seed_11 = (int) (rand() % primes->size());
-
-	// save first column
+	// save in matrix
 	(*matrix)[0][0] = (*primes)[seed_00];
+
+	// select randomly  prime number
+	int seed_01 = (int) (rand() % primes->size());
+	// save in matrix
 	(*matrix)[0][1] = (*primes)[seed_01];
+
+	// select randomly  prime number
+	int seed_02 = (int) (rand() % primes->size());
+	// save in matrix
 	(*matrix)[0][2] = (*primes)[seed_02];
+
+	// select randomly  prime number
+	int seed_11 = (int) (rand() % primes->size());
+	// save in matrix
 	(*matrix)[1][1] = (*primes)[seed_11];
 
 	// compute the sum
 	int sum = (*matrix)[0][0] + (*matrix)[0][1] + (*matrix)[0][2];
 
-	// compute
-	(*matrix)[2][2] = sum - (*matrix)[0][0] - (*matrix)[1][1];
-	// test if they are prime numbers
-	if (find(primes->begin(), primes->end(), (*matrix)[2][2]) == primes->end())
-		return false;
+	bool ret = true;
 
-	// compute
-	(*matrix)[2][1] = sum - (*matrix)[0][1] - (*matrix)[1][1];
-	// test if they are prime numbers
-	if (find(primes->begin(), primes->end(), (*matrix)[2][1]) == primes->end())
-		return false;
+#   pragma omp section
+	{
+		// compute
+		(*matrix)[2][2] = sum - (*matrix)[0][0] - (*matrix)[1][1];
+		// test if they are prime numbers
+		if (find(primes->begin(), primes->end(), (*matrix)[2][2])
+				== primes->end())
+			ret = false;
+	}
 
-	// compute
-	(*matrix)[1][2] = sum - (*matrix)[0][2] - (*matrix)[2][2];
-	if (find(primes->begin(), primes->end(), (*matrix)[1][2]) == primes->end())
-		return false;
+#   pragma omp section
+	{
+		// compute
+		(*matrix)[2][1] = sum - (*matrix)[0][1] - (*matrix)[1][1];
+		// test if they are prime numbers
+		if (find(primes->begin(), primes->end(), (*matrix)[2][1])
+				== primes->end())
+			ret = false;
+	}
 
-	// compute
-	(*matrix)[1][0] = sum - (*matrix)[1][1] - (*matrix)[1][2];
-	if (find(primes->begin(), primes->end(), (*matrix)[1][0]) == primes->end())
-		return false;
+#   pragma omp section
+	{
+		// compute
+		(*matrix)[1][2] = sum - (*matrix)[0][2] - (*matrix)[2][2];
+		if (find(primes->begin(), primes->end(), (*matrix)[1][2])
+				== primes->end())
+			ret = false;
+	}
 
-	// compute
-	(*matrix)[2][0] = sum - (*matrix)[2][1] - (*matrix)[2][2];
+#   pragma omp section
+	{
+		// compute
+		(*matrix)[1][0] = sum - (*matrix)[1][1] - (*matrix)[1][2];
+		if (find(primes->begin(), primes->end(), (*matrix)[1][0])
+				== primes->end())
+			ret = false;
+	}
 
-	return true;
+#   pragma omp section
+	{
+		// compute
+		(*matrix)[2][0] = sum - (*matrix)[2][1] - (*matrix)[2][2];
+		if (find(primes->begin(), primes->end(), (*matrix)[1][0])
+				== primes->end())
+			ret = false;
+	}
+
+	return ret;
 }
 
 /**
@@ -367,7 +406,7 @@ bool is_magic_square(ms_matrix *matrix) {
 #       pragma omp flush(ret)
 		if (ret) {
 			for (int j = 0; j < matrix->size(); j++) {
-				if ((*matrix)[i][j] < 1){
+				if ((*matrix)[i][j] < 1) {
 #                   pragma omp flush(ret)
 					ret = false;
 				}
@@ -375,7 +414,8 @@ bool is_magic_square(ms_matrix *matrix) {
 		}
 	}
 
-	if(!ret) return false;
+	if (!ret)
+		return false;
 
 	// test diagonal
 	int sum = (*matrix)[0][0] + (*matrix)[1][1] + (*matrix)[2][2];
