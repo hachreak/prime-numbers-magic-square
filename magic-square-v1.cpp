@@ -174,9 +174,9 @@ void fill_random_matrix(ms_vector *primes, ms_matrix *matrix, int seed) {
  * @param primes vector of prime numbers
  * @param matrix matrix to fill
  */
-void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix) {
+void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix, int seed_random_num) {
 	// TODO fix random generator! T_T
-	srand(time(NULL) + rand());
+	srand(time(NULL) + rand() + seed_random_num);
 	int seed = (int) (rand() % primes->size());
 
 #pragma omp parallel sections
@@ -473,8 +473,8 @@ bool explorer_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
  * @param primes array of prime numbers
  * @param matrix matrix of prime numbers generated
  */
-bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix) {
-	fill_with_consecutive(primes, matrix);
+bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
+	fill_with_consecutive(primes, matrix, seed);
 	return is_magic_square(matrix);
 }
 

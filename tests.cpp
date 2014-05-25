@@ -120,82 +120,95 @@ void test_04() {
  */
 void test_05(mpi::communicator world, int limit) {
 	// primes number data structure
-		ms_vector primes;
-		// vector to collecting all generated matrix
-		vector<ms_matrix> list;
-		// my rank
-		int rank = world.rank();
+	ms_vector primes;
+	// vector to collecting all generated matrix
+	vector<ms_matrix> list;
+	// my rank
+	int rank = world.rank();
 
-		if (rank == 0) {
-			cout << "Test the Explorer strategy...\n";
+	if (rank == 0) {
+		cout << "Test the Explorer strategy...\n";
 
-			// generate primes numbers
-			find_prime_numbers(limit, &primes);
-		}
+		// generate primes numbers
+		find_prime_numbers(limit, &primes);
+	}
 
-		// send to all the prime numbers
-		mpi::broadcast(world, primes, 0);
+	// send to all the prime numbers
+	mpi::broadcast(world, primes, 0);
 
-		int length = 3;
-		ms_matrix matrix(length, ms_vector(length));
+	int length = 3;
+	ms_matrix matrix(length, ms_vector(length));
 
-		if (explorer_strategy(&primes, &matrix, rank)) {
-			cout << "Found a magic square!\n";
-			print_matrix(matrix);
-		}
+	if (explorer_strategy(&primes, &matrix, rank)) {
+		cout << "Found a magic square!\n";
+		print_matrix(matrix);
+	}
 
-		// receive all generated matrix
-		mpi::gather(world, matrix, list, 0);
+	// receive all generated matrix
+	mpi::gather(world, matrix, list, 0);
 
-		if (rank == 0) {
-			// print all generated matrix
-			cout << "Print all generated matrix:\n";
-			print_list_matrix(list);
-		}
+	if (rank == 0) {
+		// print all generated matrix
+		cout << "Print all generated matrix:\n";
+		print_list_matrix(list);
+	}
 }
 
 /**
  * generate a consecutive matrix and view
  */
-void test_06() {
-	cout << "Generate a consecutive matrix and view...\n";
-	int limit = 100000;
-	ms_vector primes;
-	find_prime_numbers(limit, &primes);
+void test_06(mpi::communicator world, int limit) {
+	if (world.rank() == 0) {
+		cout << "Generate a consecutive matrix and view...\n";
+		ms_vector primes;
+		find_prime_numbers(limit, &primes);
 
-	int length = 3;
-	ms_matrix matrix(length, ms_vector(length));
+		int length = 3;
+		ms_matrix matrix(length, ms_vector(length));
 
-	fill_with_consecutive(&primes, &matrix);
-	print_matrix(matrix);
+		fill_with_consecutive(&primes, &matrix, 6);
+		print_matrix(matrix);
+	}
 }
 
 /**
  * Test consecutive_strategy + view generated matrix
  * @strategy
  */
-void test_07() {
-	cout << "Test consecutive strategy...\n";
-	int limit = 100000;
+void test_07(mpi::communicator world, int limit) {
+	// primes number data structure
 	ms_vector primes;
-	find_prime_numbers(limit, &primes);
-
+	// vector to collecting all generated matrix
 	vector<ms_matrix> list;
+	// my rank
+	int rank = world.rank();
 
-	for (int i = 0; i < 10; i++) {
-		int length = 3;
-		ms_matrix matrix(length, ms_vector(length));
+	if (rank == 0) {
+		cout << "Test the Consecutive strategy...\n";
 
-		if (consecutive_strategy(&primes, &matrix)) {
-			cout << "Found a magic square!\n";
-			print_matrix(matrix);
-		}
-		list.push_back(matrix);
+		// generate primes numbers
+		find_prime_numbers(limit, &primes);
 	}
 
-	// print all generated matrix
-	cout << "Print all generated matrix:\n";
-	print_list_matrix(list);
+	// send to all the prime numbers
+	mpi::broadcast(world, primes, 0);
+
+	int length = 3;
+	ms_matrix matrix(length, ms_vector(length));
+
+	if (consecutive_strategy(&primes, &matrix, rank)) {
+		cout << "Found a magic square!\n";
+		print_matrix(matrix);
+	}
+
+	// receive all generated matrix
+	mpi::gather(world, matrix, list, 0);
+
+	if (rank == 0) {
+		// print all generated matrix
+		cout << "Print all generated matrix:\n";
+		print_list_matrix(list);
+	}
 }
 
 /**
@@ -203,60 +216,75 @@ void test_07() {
  * 1) select randomly first 3 prime numbers and a+b+c = sum
  * 2) look if exists other 3 prime numbers that x+y+z = sum = a+b+c
  */
-void test_08() {
-	cout
-			<< "Test if found a trio of prime numbers that satisfy the condition A+B+C=SUM, where you know A and SUM...\n";
-	int limit = 100000;
+void test_08(mpi::communicator world, int limit) {
 	ms_vector primes;
-	find_prime_numbers(limit, &primes);
+	// vector to collecting all generated messages
+	vector<string> list;
+
+	if (world.rank() == 0) {
+		cout
+				<< "Test if found a trio of prime numbers that satisfy the condition A+B+C=SUM, where you know A and SUM...\n";
+		find_prime_numbers(limit, &primes);
+	}
+
+	// send to all the prime numbers
+	mpi::broadcast(world, primes, 0);
 
 	ms_matrix matrix(3, ms_vector(3));
 
-	for (int i = 0; i < 10; i++) {
-		srand(time(NULL) + rand());
+	srand(time(NULL) + rand() + world.rank());
 
-		// select randomly first 3 prime numbers
-		int seed_00 = (int) (rand() % primes.size());
-		int seed_01 = (int) (rand() % primes.size());
-		int seed_02 = (int) (rand() % primes.size());
+	// select randomly first 3 prime numbers
+	int seed_00 = (int) (rand() % primes.size());
+	int seed_01 = (int) (rand() % primes.size());
+	int seed_02 = (int) (rand() % primes.size());
 
-//cout<< "seed["<<i<<"][0] = "<<seed_00<<";\n";
-//cout<< "seed["<<i<<"][1] = "<<seed_01<<";\n";
-//cout<< "seed["<<i<<"][2] = "<<seed_02<<";\n";
+    // save first column
+	matrix[0][0] = primes[seed_00];
+	matrix[0][1] = primes[seed_01];
+	matrix[0][2] = primes[seed_02];
 
-// save first column
-		matrix[0][0] = primes[seed_00];
-		matrix[0][1] = primes[seed_01];
-		matrix[0][2] = primes[seed_02];
+	// compute the sum
+	int sum = matrix[0][0] + matrix[0][1] + matrix[0][2];
 
-		// compute the sum
-		int sum = matrix[0][0] + matrix[0][1] + matrix[0][2];
+	ostringstream convert;
 
-		cout << matrix[0][0] << "\t+ " << matrix[0][1] << "\t+ " << matrix[0][2]
-				<< "\t = " << sum << " (prime numbers selected) " << endl;
+	convert << matrix[0][0] << "\t+ " << matrix[0][1] << "\t+ " << matrix[0][2]
+			<< "\t = " << sum << " (prime numbers selected) " << endl;
 
-		vector<int> not2consider;
-		// list of index of prime numbers not to be considered in search
-		not2consider.push_back(seed_00);
-		not2consider.push_back(seed_01);
-		not2consider.push_back(seed_02);
+	vector<int> not2consider;
+	// list of index of prime numbers not to be considered in search
+	not2consider.push_back(seed_00);
+	not2consider.push_back(seed_01);
+	not2consider.push_back(seed_02);
 
-		int first, first_position, second, second_position;
+	int first, first_position, second, second_position;
 
-		if (look_for_couple_prime_with_condition(&primes, sum - matrix[0][0],
-				not2consider, first, first_position, second, second_position)) {
+	if (look_for_couple_prime_with_condition(&primes, sum - matrix[0][0],
+			not2consider, first, first_position, second, second_position)) {
 
-			cout << first << "\t + " << second << "\t + " << matrix[0][0]
-					<< "\t = " << (matrix[0][0] + first + second)
-					<< "\t position: (" << first_position << ","
-					<< second_position << ")" << endl;
+		convert << first << "\t + " << second << "\t + " << matrix[0][0]
+				<< "\t = " << (matrix[0][0] + first + second)
+				<< "\t position: (" << first_position << "," << second_position
+				<< ")" << endl;
 
-			assert(
-					(first + second + matrix[0][0])
-							== (matrix[0][0] + matrix[0][1] + matrix[0][2]));
-		}
+		assert(
+				(first + second + matrix[0][0])
+						== (matrix[0][0] + matrix[0][1] + matrix[0][2]));
+	} else {
+		convert << "nothing.." << endl;
 	}
 
+	string msg = convert.str();
+	// receive all generated messages
+	mpi::gather(world, msg, list, 0);
+
+	if (world.rank() == 0) {
+		for (vector<string>::iterator i = list.begin(); i != list.end(); i++) {
+			std::cout << *i << "\t";
+		}
+		cout << endl;
+	}
 }
 
 /**
@@ -301,7 +329,7 @@ void test_09(mpi::communicator world, int limit) {
 //		}
 //	}
 
-	// receive all generated matrix
+// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
 
 	if (rank == 0) {
@@ -400,7 +428,7 @@ void test_12(mpi::communicator world, int limit) {
 //		}
 //	}
 
-	// receive all generated matrix
+// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
 
 	if (rank == 0) {
@@ -422,10 +450,10 @@ int main(int argc, char *argv[]) {
 //	test_02();
 //	test_03();
 //	test_04();
-	test_05(world, limit);
-//	test_06();
-//	test_07();
-//	test_08();
+//	test_05(world, limit);
+//	test_06(world, limit);
+//	test_07(world, limit);
+	test_08(world, limit);
 //    test_09(world, limit);
 //    test_10(world);
 //	test_11();
