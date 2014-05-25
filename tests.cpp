@@ -61,12 +61,12 @@ void test_03() {
 	int length = 3;
 
 	ms_matrix matrix(length, ms_vector(length));
-	fill_random_matrix(&primes, &matrix);
-	print_matrix(matrix);
-
-	cout << "\n";
+	fill_random_matrix(&primes, &matrix, 3);
 	ms_matrix matrix2(length, ms_vector(length));
-	fill_random_matrix(&primes, &matrix2);
+	fill_random_matrix(&primes, &matrix2, 6);
+
+	print_matrix(matrix);
+	cout << "\n";
 	print_matrix(matrix2);
 }
 
@@ -118,29 +118,40 @@ void test_04() {
  * test first strategy: explorer_strategy() + print generated matrix
  * @strategy
  */
-void test_05() {
-	cout << "Explorer strategy...\n";
-	int limit = 100000;
-	ms_vector primes;
-	find_prime_numbers(limit, &primes);
+void test_05(mpi::communicator world, int limit) {
+	// primes number data structure
+		ms_vector primes;
+		// vector to collecting all generated matrix
+		vector<ms_matrix> list;
+		// my rank
+		int rank = world.rank();
 
-	vector<ms_matrix> list;
+		if (rank == 0) {
+			cout << "Test the Explorer strategy...\n";
 
-	for (int i = 0; i < 10; i++) {
+			// generate primes numbers
+			find_prime_numbers(limit, &primes);
+		}
+
+		// send to all the prime numbers
+		mpi::broadcast(world, primes, 0);
+
 		int length = 3;
 		ms_matrix matrix(length, ms_vector(length));
 
-		if (explorer_strategy(&primes, &matrix)) {
+		if (explorer_strategy(&primes, &matrix, rank)) {
 			cout << "Found a magic square!\n";
 			print_matrix(matrix);
 		}
 
-		list.push_back(matrix);
-	}
+		// receive all generated matrix
+		mpi::gather(world, matrix, list, 0);
 
-	// print all generated matrix
-	cout << "print matrix:\n";
-	print_list_matrix(list);
+		if (rank == 0) {
+			// print all generated matrix
+			cout << "Print all generated matrix:\n";
+			print_list_matrix(list);
+		}
 }
 
 /**
@@ -281,14 +292,14 @@ void test_09(mpi::communicator world, int limit) {
 	}
 
 	// test the correctness of the matrix
-	assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
-	assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
-	assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
-	for (int j = 0; j < matrix.size(); j++) {
-		for (int z = 0; z < matrix.size(); z++) {
-			assert(matrix[j][z] != 0);
-		}
-	}
+//	assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
+//	assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
+//	assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
+//	for (int j = 0; j < matrix.size(); j++) {
+//		for (int z = 0; z < matrix.size(); z++) {
+//			assert(matrix[j][z] != 0);
+//		}
+//	}
 
 	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
@@ -308,7 +319,7 @@ void test_10(mpi::communicator world) {
 	int limit = 100;
 
 	if (world.rank() == 0) {
-		cout << "Test the heuristic strategy...\n";
+		cout << "Test broadcasting...\n";
 
 		// generate primes numbers
 		find_prime_numbers(limit, &primes);
@@ -362,7 +373,7 @@ void test_12(mpi::communicator world, int limit) {
 	int rank = world.rank();
 
 	if (rank == 0) {
-		cout << "Test the heuristic strategy...\n";
+		cout << "Test the heuristic strategy 2...\n";
 
 		// generate primes numbers
 		find_prime_numbers(limit, &primes);
@@ -410,15 +421,15 @@ int main(int argc, char *argv[]) {
 // 	test_01();
 //	test_02();
 //	test_03();
-	test_04();
-//	test_05();
+//	test_04();
+	test_05(world, limit);
 //	test_06();
 //	test_07();
 //	test_08();
-//  test_09(world, limit);
-//  test_10(world);
+//    test_09(world, limit);
+//    test_10(world);
 //	test_11();
-	test_12(world, limit);
+//	test_12(world, limit);
 //	int length = 3;
 //	ms_matrix matrix(length, ms_vector(length));
 //	print_matrix(matrix);

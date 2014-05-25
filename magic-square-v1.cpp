@@ -151,12 +151,12 @@ void find_prime_numbers(int limit, ms_vector *primes) {
  * @param primes vector of prime numbers
  * @param matrix matrix to fill
  */
-void fill_random_matrix(ms_vector *primes, ms_matrix *matrix) {
+void fill_random_matrix(ms_vector *primes, ms_matrix *matrix, int seed) {
 	// init random generator
 	// TODO fix random generator! T_T
 //	std::default_random_engine generator;
 //	std::uniform_real_distribution<double> distribution(0.0, primes->size());
-	srand(time(NULL) + rand());
+	srand(time(NULL) + rand() + seed);
 
 	// TODO parallelize with MPI???
 	for (int i = 0; i < matrix->size(); i++) {
@@ -461,8 +461,8 @@ bool is_magic_square(ms_matrix *matrix) {
  * @param primes array of prime numbers
  * @param matrix matrix of prime numbers generated
  */
-bool explorer_strategy(ms_vector *primes, ms_matrix *matrix) {
-	fill_random_matrix(primes, matrix);
+bool explorer_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
+	fill_random_matrix(primes, matrix, seed);
 	return is_magic_square(matrix);
 }
 
