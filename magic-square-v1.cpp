@@ -217,17 +217,18 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
 					found_sec = find(not2consider.begin(), not2consider.end(),
 							j);
 					// if the index of prime number is not ones to avoid
+#                   pragma omp flush(ret)
 					if (!ret && found_sec == not2consider.end()) {
 						int s = (*primes)[j];
 //#                           pragma omp critical
 						if (sum == (f + s)) {
 							// found!
+#                           pragma omp flush(ret)
 							ret = true;
 							first = f;
 							first_position = i;
 							second = s;
 							second_position = j;
-							//return true;
 						}
 					}
 				}
@@ -269,6 +270,7 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 
 	bool ret = true;
 	for (int i = 0; i < matrix->size(); i++) {
+#       pragma omp flush(ret)
 		if (ret) {
 			// test i-th column
 			if (look_for_couple_prime_with_condition(primes,
@@ -290,6 +292,7 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 				(*matrix)[1][i] = n1;
 				(*matrix)[2][i] = n2;
 			} else {
+#               pragma omp flush(ret)
 				ret = false;
 			}
 		}
@@ -346,9 +349,6 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 
 	// compute
 	(*matrix)[2][0] = sum - (*matrix)[2][1] - (*matrix)[2][2];
-//	if (find(primes->begin(), primes->end(), (*matrix)[2][0])
-//			== primes->end())
-//		return false;
 
 	return true;
 }
@@ -364,10 +364,13 @@ bool is_magic_square(ms_matrix *matrix) {
 	// test if all numbers are different from 0
 #   pragma omp parallel for default(none) shared(matrix, ret)
 	for (int i = 0; i < matrix->size(); i++) {
+#       pragma omp flush(ret)
 		if (ret) {
 			for (int j = 0; j < matrix->size(); j++) {
-				if ((*matrix)[i][j] < 1)
+				if ((*matrix)[i][j] < 1){
+#                   pragma omp flush(ret)
 					ret = false;
+				}
 			}
 		}
 	}
@@ -383,19 +386,20 @@ bool is_magic_square(ms_matrix *matrix) {
 		// test rows and cols
 #   pragma omp parallel for default(none) shared(ret, matrix, sum)
 		for (int i = 0; i < 3; i++) {
+#           pragma omp flush(ret)
 			if (ret) {
 				// test col
 				if (sum
 						!= ((*matrix)[i][0] + (*matrix)[i][1] + (*matrix)[i][2])) {
 					// TODO can I use atomic???
-#                   pragma omp critical
+#                   pragma omp flush(ret)
 					ret = false;
 				}
 				// test row
 				if (sum
 						!= ((*matrix)[0][i] + (*matrix)[1][i] + (*matrix)[2][i])) {
 					// TODO can I use atomic???
-#                   pragma omp critical
+#                   pragma omp flush(ret)
 					ret = false;
 				}
 			}
