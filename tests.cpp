@@ -41,19 +41,19 @@
  */
 void test_02() {
 	int limit = 100;
-	cout<<"Find prime numbers.... [2,"<<limit<<"]\n";
+	cout << "Find prime numbers.... [2," << limit << "]\n";
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
 
 	print_vector(primes);
-	cout<<"\n";
+	cout << "\n";
 }
 
 /**
  * get random matrix of prime numbers
  */
 void test_03() {
-	cout<<"Fill a matrix with random prime numbers...\n";
+	cout << "Fill a matrix with random prime numbers...\n";
 	int limit = 100;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -64,7 +64,7 @@ void test_03() {
 	fill_random_matrix(&primes, &matrix);
 	print_matrix(matrix);
 
-	cout<<"\n";
+	cout << "\n";
 	ms_matrix matrix2(length, ms_vector(length));
 	fill_random_matrix(&primes, &matrix2);
 	print_matrix(matrix2);
@@ -74,7 +74,7 @@ void test_03() {
  * test function is_magic_square()
  */
 void test_04() {
-	cout<< "Test if identify correctly a magic square....\n";
+	cout << "Test if identify correctly a magic square....\n";
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
@@ -108,7 +108,7 @@ void test_04() {
  * @strategy
  */
 void test_05() {
-	cout<<"Explorer strategy...\n";
+	cout << "Explorer strategy...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -136,7 +136,7 @@ void test_05() {
  * generate a consecutive matrix and view
  */
 void test_06() {
-	cout<<"Generate a consecutive matrix and view...\n";
+	cout << "Generate a consecutive matrix and view...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -153,7 +153,7 @@ void test_06() {
  * @strategy
  */
 void test_07() {
-	cout<<"Test consecutive strategy...\n";
+	cout << "Test consecutive strategy...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
@@ -182,43 +182,11 @@ void test_07() {
  * 2) look if exists other 3 prime numbers that x+y+z = sum = a+b+c
  */
 void test_08() {
-	cout<<"Test if found a trio of prime numbers that satisfy the condition A+B+C=SUM, where you know A and SUM...\n";
+	cout
+			<< "Test if found a trio of prime numbers that satisfy the condition A+B+C=SUM, where you know A and SUM...\n";
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
-
-//	ms_matrix seed(10, ms_vector(3));
-
-//	seed[0][0] = 8857;
-//	seed[0][1] = 1417;
-//	seed[0][2] = 1929;
-//	seed[1][0] = 6607;
-//	seed[1][1] = 3980;
-//	seed[1][2] = 7989;
-//	seed[2][0] = 2164;
-//	seed[2][1] = 7916;
-//	seed[2][2] = 2584;
-//	seed[3][0] = 1072;
-//	seed[3][1] = 4351;
-//	seed[3][2] = 2396;
-//	seed[4][0] = 6047;
-//	seed[4][1] = 8059;
-//	seed[4][2] = 3194;
-//	seed[5][0] = 3093;
-//	seed[5][1] = 7599;
-//	seed[5][2] = 5406;
-//	seed[6][0] = 5928;
-//	seed[6][1] = 603;
-//	seed[6][2] = 1596;
-//	seed[7][0] = 9384;
-//	seed[7][1] = 4384;
-//	seed[7][2] = 5584;
-//	seed[8][0] = 4490;
-//	seed[8][1] = 7482;
-//	seed[8][2] = 3985;
-//	seed[9][0] = 8384;
-//	seed[9][1] = 3556;
-//	seed[9][2] = 2843;
 
 	ms_matrix matrix(3, ms_vector(3));
 
@@ -234,7 +202,7 @@ void test_08() {
 //cout<< "seed["<<i<<"][1] = "<<seed_01<<";\n";
 //cout<< "seed["<<i<<"][2] = "<<seed_02<<";\n";
 
-		// save first column
+// save first column
 		matrix[0][0] = primes[seed_00];
 		matrix[0][1] = primes[seed_01];
 		matrix[0][2] = primes[seed_02];
@@ -261,7 +229,9 @@ void test_08() {
 					<< "\t position: (" << first_position << ","
 					<< second_position << ")" << endl;
 
-				assert((first + second + matrix[0][0]) == (matrix[0][0] + matrix[0][1] + matrix[0][2]));
+			assert(
+					(first + second + matrix[0][0])
+							== (matrix[0][0] + matrix[0][1] + matrix[0][2]));
 		}
 	}
 
@@ -273,57 +243,174 @@ void test_08() {
  * the others cells as consequence of this selection.
  * @strategy
  */
-void test_09() {
-	cout<<"Test the heuristic strategy...\n";
+void test_09(mpi::communicator world, int limit) {
+	// primes number data structure
+	ms_vector primes;
+	// vector to collecting all generated matrix
+	vector<ms_matrix> list;
+	// my rank
+	int rank = world.rank();
+
+	if (rank == 0) {
+		cout << "Test the heuristic strategy...\n";
+
+		// generate primes numbers
+		find_prime_numbers(limit, &primes);
+	}
+
+	// send to all the prime numbers
+	mpi::broadcast(world, primes, 0);
+
+	int length = 3;
+	ms_matrix matrix(length, ms_vector(length));
+
+	if (heuristic_strategy_1(&primes, &matrix, rank)) {
+		cout << "Found a magic square!\n";
+		print_matrix(matrix);
+	}
+
+	// test the correctness of the matrix
+	assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
+	assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
+	assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
+	for (int j = 0; j < matrix.size(); j++) {
+		for (int z = 0; z < matrix.size(); z++) {
+			assert(matrix[j][z] != 0);
+		}
+	}
+
+	// receive all generated matrix
+	mpi::gather(world, matrix, list, 0);
+
+	if (rank == 0) {
+		// print all generated matrix
+		cout << "Print all generated matrix:\n";
+		print_list_matrix(list);
+	}
+}
+
+/**
+ * Test of broadcasting a vector
+ */
+void test_10(mpi::communicator world) {
+	ms_vector primes;
+	int limit = 100;
+
+	if (world.rank() == 0) {
+		cout << "Test the heuristic strategy...\n";
+
+		// generate primes numbers
+		find_prime_numbers(limit, &primes);
+
+		print_vector(primes);
+
+		// vector to collecting all generated matrix
+		vector<ms_matrix> list;
+	}
+
+	// send to all the prime numbers
+	mpi::broadcast(world, primes, 0);
+	//MPI_Bcast(&primes.data(), primes.size(), MPI_INT, 0, MPI_COMM_WORLD);
+
+	if (world.rank() == 1) {
+		print_vector(primes);
+	}
+}
+
+void test_11() {
+	int seed = 1;
+
+	cout << "Test fill in heuristic strategy v2...\n";
+
 	int limit = 100000;
 	ms_vector primes;
 	find_prime_numbers(limit, &primes);
 
+	ms_matrix matrix(3, ms_vector(3));
+
+	fill_in_heuristic_mode_1(&primes, &matrix, seed);
+
+	print_matrix(matrix);
+}
+
+/**
+ * Heuristic strategy 2:
+ * Select randomly the first 4 numbers, then I look for
+ * the others cells as consequence of this selection.
+ * I have 8 equations and 9 variables.
+ * But, I need only 5 variables and the others can be
+ * calculated from those.
+ * @strategy
+ */
+void test_12(mpi::communicator world, int limit) {
+	// primes number data structure
+	ms_vector primes;
+	// vector to collecting all generated matrix
 	vector<ms_matrix> list;
+	// my rank
+	int rank = world.rank();
 
-	for (int i = 0; i < 10; i++) {
-		int length = 3;
-		ms_matrix matrix(length, ms_vector(length));
+	if (rank == 0) {
+		cout << "Test the heuristic strategy...\n";
 
-		if (heuristic_strategy(&primes, &matrix)) {
-			cout << "Found a magic square!\n";
-			print_matrix(matrix);
-		}
-
-		list.push_back(matrix);
-		assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
-		assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
-		assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
-
-		for(int j=0; j<matrix.size(); j++){
-			for(int z=0; z<matrix.size(); z++){
-				assert(matrix[j][z] != 0);
-			}
-		}
+		// generate primes numbers
+		find_prime_numbers(limit, &primes);
 	}
 
-	// print all generated matrix
-	cout << "Print all generated matrix:\n";
-	print_list_matrix(list);
+	// send to all the prime numbers
+	mpi::broadcast(world, primes, 0);
+
+	int length = 3;
+	ms_matrix matrix(length, ms_vector(length));
+
+	if (heuristic_strategy_2(&primes, &matrix, rank)) {
+		cout << "Found a magic square!\n";
+		print_matrix(matrix);
+	}
+
+	// test the correctness of the matrix
+//	assert(matrix[0][0] + matrix[1][0] + matrix[2][0]);
+//	assert(matrix[0][1] + matrix[1][1] + matrix[2][1]);
+//	assert(matrix[0][2] + matrix[1][2] + matrix[2][2]);
+//	for (int j = 0; j < matrix.size(); j++) {
+//		for (int z = 0; z < matrix.size(); z++) {
+//			assert(matrix[j][z] != 0);
+//		}
+//	}
+
+	// receive all generated matrix
+	mpi::gather(world, matrix, list, 0);
+
+	if (rank == 0) {
+		// print all generated matrix
+		cout << "Print all generated matrix:\n";
+		print_list_matrix(list);
+	}
 }
 
 int main(int argc, char *argv[]) {
-	//MPI_Init(&argc, &argv);
+	int size, rank;
 
-//s	test_01();
-	test_02();
-	test_03();
-	test_04();
-	test_05();
-	test_06();
-	test_07();
-	test_08();
-	test_09();
+	mpi::environment env(argc, argv);
+	mpi::communicator world;
+
+	int limit = 100000;
+
+// 	test_01();
+//	test_02();
+//	test_03();
+//	test_04();
+//	test_05();
+//	test_06();
+//	test_07();
+//	test_08();
+//  test_09(world, limit);
+//  test_10(world);
+//	test_11();
+	test_12(world, limit);
 //	int length = 3;
 //	ms_matrix matrix(length, ms_vector(length));
 //	print_matrix(matrix);
-
-//    MPI_Finalize();
 
 	return 0;
 }

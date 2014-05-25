@@ -19,11 +19,18 @@
 
 #include <omp.h>
 #include <stdlib.h>
-#include <iostream>
+//#include <iostream>
 #include <math.h>
 #include <vector>
 #include <random>
 #include <algorithm>
+#include <boost/mpi.hpp>
+#include <iostream>
+#include <cstdlib>
+#include <boost/serialization/vector.hpp>
+
+namespace mpi = boost::mpi;
+
 //#include <mpi.h>
 //#include <time.h>
 
@@ -103,10 +110,10 @@ void find_prime_numbers(int limit, ms_vector *primes) {
 	is_prime[2] = true;
 	is_prime[3] = true;
 
-#   pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime)
+//#   pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime)
 	for (int x = 1; x <= sqrt_limit; x++) {
 		// TODO can I parallelize????
-//#       pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime) private(x)
+#       pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
 		for (int y = 1; y <= sqrt_limit; y++) {
 			int n = 4 * x * x + y * y;
 
@@ -235,9 +242,9 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
  * @param primes vector of prime numbers
  * @param matrix matrix to fill
  */
-bool fill_in_heuristic_mode(ms_vector *primes, ms_matrix *matrix) {
+bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 	// TODO fix random generator! T_T
-	srand(time(NULL) + rand());
+	srand(time(NULL) + rand() + seed);
 
 	// select randomly first 3 prime numbers
 	int seed_00 = (int) (rand() % primes->size());
@@ -261,8 +268,6 @@ bool fill_in_heuristic_mode(ms_vector *primes, ms_matrix *matrix) {
 	int first, first_position, second, second_position;
 
 	bool ret = true;
-	// TODO use omp or MPI????
-//#   pragma omp parallel for
 	for (int i = 0; i < matrix->size(); i++) {
 		if (ret) {
 			// test i-th column
@@ -270,14 +275,20 @@ bool fill_in_heuristic_mode(ms_vector *primes, ms_matrix *matrix) {
 					sum - (*matrix)[0][i], not2consider, first, first_position,
 					second, second_position)) {
 				// save position of founded prime numbers
-//#               pragma omp critical
-				{
-					not2consider.push_back(first_position);
-					not2consider.push_back(second_position);
-				}
+				not2consider.push_back(first_position);
+				not2consider.push_back(second_position);
+
 				// save new prime numbers
-				(*matrix)[1][i] = first;
-				(*matrix)[2][i] = second;
+				int n1, n2;
+				if ((i % 2) == 0) {
+					n1 = first;
+					n2 = second;
+				} else {
+					n1 = second;
+					n2 = first;
+				}
+				(*matrix)[1][i] = n1;
+				(*matrix)[2][i] = n2;
 			} else {
 				ret = false;
 			}
@@ -285,6 +296,65 @@ bool fill_in_heuristic_mode(ms_vector *primes, ms_matrix *matrix) {
 	}
 
 	return ret;
+}
+
+/**
+ * Fill matrix with a heuristic strategy: first 5 random and then compute the others.
+ * @param primes vector of prime numbers
+ * @param matrix matrix to fill
+ */
+bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
+	// TODO fix random generator! T_T
+	srand(time(NULL) + rand() + seed);
+
+	// select randomly first 3 prime numbers
+	int seed_00 = (int) (rand() % primes->size());
+	int seed_01 = (int) (rand() % primes->size());
+	int seed_02 = (int) (rand() % primes->size());
+	int seed_11 = (int) (rand() % primes->size());
+
+	// save first column
+	(*matrix)[0][0] = (*primes)[seed_00];
+	(*matrix)[0][1] = (*primes)[seed_01];
+	(*matrix)[0][2] = (*primes)[seed_02];
+	(*matrix)[1][1] = (*primes)[seed_11];
+
+	// compute the sum
+	int sum = (*matrix)[0][0] + (*matrix)[0][1] + (*matrix)[0][2];
+
+	// compute
+	(*matrix)[2][2] = sum - (*matrix)[0][0] - (*matrix)[1][1];
+	// test if they are prime numbers
+	if (find(primes->begin(), primes->end(), (*matrix)[2][2])
+			== primes->end())
+		return false;
+
+	// compute
+	(*matrix)[2][1] = sum - (*matrix)[0][1] - (*matrix)[1][1];
+	// test if they are prime numbers
+	if (find(primes->begin(), primes->end(), (*matrix)[2][1])
+			== primes->end())
+		return false;
+
+	// compute
+	(*matrix)[1][2] = sum - (*matrix)[0][2] - (*matrix)[2][2];
+	if (find(primes->begin(), primes->end(), (*matrix)[1][2])
+			== primes->end())
+		return false;
+
+	// compute
+	(*matrix)[1][0] = sum - (*matrix)[1][1] - (*matrix)[1][2];
+	if (find(primes->begin(), primes->end(), (*matrix)[1][0])
+			== primes->end())
+		return false;
+
+	// compute
+	(*matrix)[2][0] = sum - (*matrix)[2][1] - (*matrix)[2][2];
+//	if (find(primes->begin(), primes->end(), (*matrix)[2][0])
+//			== primes->end())
+//		return false;
+
+	return true;
 }
 
 /**
@@ -358,8 +428,24 @@ bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix) {
  * @param primes array of prime numbers
  * @param matrix matrix of prime numbers generated
  */
-bool heuristic_strategy(ms_vector *primes, ms_matrix *matrix) {
-	if (fill_in_heuristic_mode(primes, matrix))
+bool heuristic_strategy_1(ms_vector *primes, ms_matrix *matrix, int seed) {
+	if (fill_in_heuristic_mode_1(primes, matrix, seed))
+		return is_magic_square(matrix);
+	return false;
+}
+
+/**
+ * Heuristic strategy:
+ * In this approach, I select randomly the first 4 numbers, then I look for
+ * the others cells as consequence of this selection.
+ * I have 8 equations and 9 variables.
+ * But, I need only 5 variables and the others can be calculated from those.
+ *
+ * @param primes array of prime numbers
+ * @param matrix matrix of prime numbers generated
+ */
+bool heuristic_strategy_2(ms_vector *primes, ms_matrix *matrix, int seed) {
+	if (fill_in_heuristic_mode_2(primes, matrix, seed))
 		return is_magic_square(matrix);
 	return false;
 }
