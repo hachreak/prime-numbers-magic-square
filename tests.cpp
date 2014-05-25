@@ -18,7 +18,7 @@
  */
 
 // temporary debug
-#include "magic-square.cpp"
+#include "magic-square.h"
 #include <assert.h>
 
 /**
@@ -147,7 +147,8 @@ void test_05(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	if (explorer_strategy(&primes, &matrix, rank)) {
+	fill_random_matrix(&primes, &matrix, rank);
+	if (is_magic_square(&matrix)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}
@@ -204,7 +205,8 @@ void test_07(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	if (consecutive_strategy(&primes, &matrix, rank)) {
+	fill_with_consecutive(&primes, &matrix, rank);
+	if (is_magic_square(&matrix)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}
@@ -322,7 +324,7 @@ void test_09(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	if (heuristic_strategy_1(&primes, &matrix, rank)) {
+	if (fill_in_heuristic_mode_1(&primes, &matrix, rank)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}
@@ -415,7 +417,7 @@ void test_12(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	if (heuristic_strategy_2(&primes, &matrix, rank)) {
+	if (fill_in_heuristic_mode_2(&primes, &matrix, rank)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}

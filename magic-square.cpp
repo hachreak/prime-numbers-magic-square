@@ -449,59 +449,59 @@ bool is_magic_square(ms_matrix *matrix) {
 	return ret;
 }
 
-/**
- * In this approach the matrix elements are taken at random and 
- * repeating primes within the matrix is allowed.
- *
- * @param primes array of prime numbers
- * @param matrix matrix of prime numbers generated
- */
-bool explorer_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
-	fill_random_matrix(primes, matrix, seed);
-	return is_magic_square(matrix);
-}
-
-/**
- * In this approach only the central element is taken at random and
- * the others are taken around him.
- *
- * @param primes array of prime numbers
- * @param matrix matrix of prime numbers generated
- */
-bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
-	fill_with_consecutive(primes, matrix, seed);
-	return is_magic_square(matrix);
-}
-
-/**
- * Heuristic strategy:
- * In this approach, I select randomly the first column,
- * then I look for the others cells as consequence of this selection.
- *
- * @param primes array of prime numbers
- * @param matrix matrix of prime numbers generated
- */
-bool heuristic_strategy_1(ms_vector *primes, ms_matrix *matrix, int seed) {
-	if (fill_in_heuristic_mode_1(primes, matrix, seed))
-		return is_magic_square(matrix);
-	return false;
-}
-
-/**
- * Heuristic strategy:
- * In this approach, I select randomly the first 4 numbers, then I look for
- * the others cells as consequence of this selection.
- * I have 8 equations and 9 variables.
- * But, I need only 5 variables and the others can be calculated from those.
- *
- * @param primes array of prime numbers
- * @param matrix matrix of prime numbers generated
- */
-bool heuristic_strategy_2(ms_vector *primes, ms_matrix *matrix, int seed) {
-	if (fill_in_heuristic_mode_2(primes, matrix, seed))
-		return is_magic_square(matrix);
-	return false;
-}
+///**
+// * In this approach the matrix elements are taken at random and
+// * repeating primes within the matrix is allowed.
+// *
+// * @param primes array of prime numbers
+// * @param matrix matrix of prime numbers generated
+// */
+//bool explorer_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
+//	fill_random_matrix(primes, matrix, seed);
+//	return is_magic_square(matrix);
+//}
+//
+///**
+// * In this approach only the central element is taken at random and
+// * the others are taken around him.
+// *
+// * @param primes array of prime numbers
+// * @param matrix matrix of prime numbers generated
+// */
+//bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
+//	fill_with_consecutive(primes, matrix, seed);
+//	return is_magic_square(matrix);
+//}
+//
+///**
+// * Heuristic strategy:
+// * In this approach, I select randomly the first column,
+// * then I look for the others cells as consequence of this selection.
+// *
+// * @param primes array of prime numbers
+// * @param matrix matrix of prime numbers generated
+// */
+//bool heuristic_strategy_1(ms_vector *primes, ms_matrix *matrix, int seed) {
+//	if (fill_in_heuristic_mode_1(primes, matrix, seed))
+//		return is_magic_square(matrix);
+//	return false;
+//}
+//
+///**
+// * Heuristic strategy:
+// * In this approach, I select randomly the first 4 numbers, then I look for
+// * the others cells as consequence of this selection.
+// * I have 8 equations and 9 variables.
+// * But, I need only 5 variables and the others can be calculated from those.
+// *
+// * @param primes array of prime numbers
+// * @param matrix matrix of prime numbers generated
+// */
+//bool heuristic_strategy_2(ms_vector *primes, ms_matrix *matrix, int seed) {
+//	if (fill_in_heuristic_mode_2(primes, matrix, seed))
+//		return is_magic_square(matrix);
+//	return false;
+//}
 
 /**
  * test first strategy: explorer_strategy() + print generated matrix
@@ -528,7 +528,7 @@ void test_explorer_strategy(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	explorer_strategy(&primes, &matrix, rank);
+	fill_random_matrix(&primes, &matrix, rank);
 
 	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
@@ -565,7 +565,7 @@ void test_consecutive_strategy(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	consecutive_strategy(&primes, &matrix, rank);
+	fill_with_consecutive(&primes, &matrix, rank);
 
 	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
@@ -604,7 +604,7 @@ void test_heuristic_strategy_1(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	heuristic_strategy_1(&primes, &matrix, rank);
+	fill_in_heuristic_mode_1(&primes, &matrix, rank);
 
 	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);
@@ -646,7 +646,7 @@ void test_heuristic_strategy_2(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	heuristic_strategy_2(&primes, &matrix, rank);
+	fill_in_heuristic_mode_2(&primes, &matrix, rank);
 
 	// receive all generated matrix
 	mpi::gather(world, matrix, list, 0);

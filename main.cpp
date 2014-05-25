@@ -27,16 +27,16 @@ int main(int argc, char *argv[]) {
 	mpi::communicator world;
 
 	int limit = 100000;
-	int strategy = 1;
+	int strategy = 4;
 	
 	if(strategy == 1){
-		test_explorer_strategy();
+		test_explorer_strategy(world, limit);
 	}else if(strategy == 2){
-		test_consecutive_strategy();
+		test_consecutive_strategy(world, limit);
 	}else if(strategy == 3){
-		test_heuristic_strategy_1();
+		test_heuristic_strategy_1(world, limit);
 	}else if(strategy == 4){
-		test_heuristic_strategy_2();
+		test_heuristic_strategy_2(world, limit);
 	}
 	
 

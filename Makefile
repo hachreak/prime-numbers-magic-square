@@ -1,22 +1,22 @@
 FLAGS=-Wall -std=c++11 -fopenmp -lboost_mpi -lboost_serialization
 CC=mpic++
 
-all:  main test
+all:  main tests
 
-test: magic-square.o test.o
-	${CC} main-square.o test.o -o bin/test
+tests: magic-square.o tests.o
+	${CC} ${FLAGS} bin/magic-square.o bin/tests.o -o bin/tests
 
 main: magic-square.o main.o
-	${CC} main-square.o main.o -o bin/ms
+	${CC} ${FLAGS} bin/magic-square.o bin/main.o -o bin/main
 
-test.o: test.cpp
-	${CC} ${FLAGS} magic-square.o test.cpp -o bin/test.o
+tests.o: tests.cpp
+	${CC} ${FLAGS} -c tests.cpp -o bin/tests.o
 
 main.o: main.cpp
-	${CC} ${FLAGS} main.cpp -o bin/main.o
+	${CC} ${FLAGS} -c main.cpp -o bin/main.o
 
 magic-square.o: magic-square.cpp magic-square.h
 	${CC} ${FLAGS} -c magic-square.cpp -o bin/magic-square.o 
 
 clean:
-	rm -f bin/*.o bin/*~
+	rm -f bin/*
