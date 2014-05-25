@@ -325,27 +325,23 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 	// compute
 	(*matrix)[2][2] = sum - (*matrix)[0][0] - (*matrix)[1][1];
 	// test if they are prime numbers
-	if (find(primes->begin(), primes->end(), (*matrix)[2][2])
-			== primes->end())
+	if (find(primes->begin(), primes->end(), (*matrix)[2][2]) == primes->end())
 		return false;
 
 	// compute
 	(*matrix)[2][1] = sum - (*matrix)[0][1] - (*matrix)[1][1];
 	// test if they are prime numbers
-	if (find(primes->begin(), primes->end(), (*matrix)[2][1])
-			== primes->end())
+	if (find(primes->begin(), primes->end(), (*matrix)[2][1]) == primes->end())
 		return false;
 
 	// compute
 	(*matrix)[1][2] = sum - (*matrix)[0][2] - (*matrix)[2][2];
-	if (find(primes->begin(), primes->end(), (*matrix)[1][2])
-			== primes->end())
+	if (find(primes->begin(), primes->end(), (*matrix)[1][2]) == primes->end())
 		return false;
 
 	// compute
 	(*matrix)[1][0] = sum - (*matrix)[1][1] - (*matrix)[1][2];
-	if (find(primes->begin(), primes->end(), (*matrix)[1][0])
-			== primes->end())
+	if (find(primes->begin(), primes->end(), (*matrix)[1][0]) == primes->end())
 		return false;
 
 	// compute
@@ -364,6 +360,19 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
  */
 bool is_magic_square(ms_matrix *matrix) {
 	bool ret = true;
+
+	// test if all numbers are different from 0
+#   pragma omp parallel for default(none) shared(matrix, ret)
+	for (int i = 0; i < matrix->size(); i++) {
+		if (ret) {
+			for (int j = 0; j < matrix->size(); j++) {
+				if ((*matrix)[i][j] < 1)
+					ret = false;
+			}
+		}
+	}
+
+	if(!ret) return false;
 
 	// test diagonal
 	int sum = (*matrix)[0][0] + (*matrix)[1][1] + (*matrix)[2][2];

@@ -90,17 +90,28 @@ void test_04() {
 
 	print_matrix(matrix);
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+	assert(is_magic_square(&matrix));
 
 	matrix[2][2] = 4;
 
 	print_matrix(matrix);
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+	assert(!is_magic_square(&matrix));
 
 	matrix[2][2] = 67;
 	matrix[1][1] = 38;
 
 	print_matrix(matrix);
 	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+	assert(!is_magic_square(&matrix));
+
+	matrix[1][1] = 36;
+	matrix[1][2] = 0;
+
+	print_matrix(matrix);
+	cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
+	assert(!is_magic_square(&matrix));
+
 }
 
 /**
@@ -399,7 +410,7 @@ int main(int argc, char *argv[]) {
 // 	test_01();
 //	test_02();
 //	test_03();
-//	test_04();
+	test_04();
 //	test_05();
 //	test_06();
 //	test_07();
