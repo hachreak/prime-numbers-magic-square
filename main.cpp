@@ -22,23 +22,29 @@
 
 namespace mpi = boost::mpi;
 
+void select_strategy(mpi::communicator world, int limit, int strategy) {
+	if (strategy == 1) {
+		test_explorer_strategy(world, limit);
+	} else if (strategy == 2) {
+		test_consecutive_strategy(world, limit);
+	} else if (strategy == 3) {
+		test_heuristic_strategy_1(world, limit);
+	} else if (strategy == 4) {
+		test_heuristic_strategy_2(world, limit);
+	}
+	world.barrier();
+}
+
 int main(int argc, char *argv[]) {
 	mpi::environment env(argc, argv);
 	mpi::communicator world;
 
 	int limit = 100000;
-	int strategy = 4;
-	
-	if(strategy == 1){
-		test_explorer_strategy(world, limit);
-	}else if(strategy == 2){
-		test_consecutive_strategy(world, limit);
-	}else if(strategy == 3){
-		test_heuristic_strategy_1(world, limit);
-	}else if(strategy == 4){
-		test_heuristic_strategy_2(world, limit);
-	}
-	
+
+	select_strategy(world, limit, 1);
+	select_strategy(world, limit, 2);
+	//select_strategy(world, limit, 3);
+	select_strategy(world, limit, 4);
 
 	return 0;
 }

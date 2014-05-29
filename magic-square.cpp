@@ -27,12 +27,7 @@
 #include <boost/serialization/vector.hpp>
 #include "magic-square.h"
 
-//#include <mpi.h>
-//#include <time.h>
-
 // http://en.wikipedia.org/wiki/Sieve_of_Atkin
-
-//#define limit 1000000
 
 /**
  * Print a vector
@@ -77,10 +72,9 @@ void print_list_matrix(vector<ms_matrix> list) {
  * @param primes the output array
  */
 void is_prime2primes(bool *is_prime, int limit, ms_vector *primes) {
-//#   pragma omp parallel for default(none) shared(limit, is_prime, primes)
+	// get all prime numbers preserving the order
 	for (int n = 0; n <= limit; n++) {
 		if (is_prime[n]) {
-//#           pragma omp critical
 			primes->push_back(n);
 		}
 	}
@@ -97,17 +91,16 @@ void find_prime_numbers(int limit, ms_vector *primes) {
 	bool is_prime[limit + 1];
 
 	// init vector
-#   pragma omp parallel for default(none) shared(limit, is_prime)
+#	pragma omp parallel for default(none) shared(limit, is_prime)
 	for (int i = 0; i < (limit + 1); i++) {
 		is_prime[i] = false;
 	}
 	is_prime[2] = true;
 	is_prime[3] = true;
 
-//#   pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime)
+	// execute algorithm
 	for (int x = 1; x <= sqrt_limit; x++) {
-		// TODO can I parallelize????
-#       pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
+#		pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
 		for (int y = 1; y <= sqrt_limit; y++) {
 			int n = 4 * x * x + y * y;
 
@@ -126,7 +119,8 @@ void find_prime_numbers(int limit, ms_vector *primes) {
 		}
 	}
 
-#   pragma omp parallel for default(none) shared(sqrt_limit, is_prime, limit)
+	// remove the no prime numbers
+#	pragma omp parallel for default(none) shared(sqrt_limit, is_prime, limit)
 	for (int n = 5; n <= sqrt_limit; n++) {
 		if (is_prime[n]) {
 			int k = n * n;
@@ -152,9 +146,9 @@ void fill_random_matrix(ms_vector *primes, ms_matrix *matrix, int seed) {
 //	std::uniform_real_distribution<double> distribution(0.0, primes->size());
 	srand(time(NULL) + rand() + seed);
 
-	// TODO parallelize with MPI???
+	// fill the matrix
+#	pragma omp parallel for default(none) shared(matrix, primes)
 	for (unsigned int i = 0; i < matrix->size(); i++) {
-#       pragma omp parallel for default(none) shared(matrix, primes, i)
 		for (unsigned int j = 0; j < matrix->size(); j++) {
 //			int x = (int)distribution(generator);
 			int x = (int) (rand() % primes->size());
@@ -176,7 +170,7 @@ void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix,
 
 #pragma omp parallel sections
 	{
-#   pragma omp section
+#		pragma omp section
 		{
 			(*matrix)[0][0] = (*primes)[seed - 1];
 			(*matrix)[0][1] = (*primes)[seed + 1];
@@ -184,7 +178,7 @@ void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix,
 			(*matrix)[1][0] = (*primes)[seed + 2];
 		}
 
-#   pragma omp section
+#		pragma omp section
 		{
 			(*matrix)[1][1] = (*primes)[seed];
 			(*matrix)[1][2] = (*primes)[seed - 3];
@@ -215,20 +209,18 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
 			// if the index of prime number is not ones to avoid
 			if (found_first == not2consider.end()) {
 				int f = (*primes)[i];
-#               pragma omp parallel for default(none) shared(f, size, not2consider, ret, primes, sum, first, first_position, second, second_position, i)
+#				pragma omp parallel for default(none) shared(f, size, not2consider, ret, primes, sum, first, first_position, second, second_position, i)
 				for (int j = 0; j < size; j++) {
 					ms_vector::iterator found_sec;
-//#                   pragma omp critical
 					found_sec = find(not2consider.begin(), not2consider.end(),
 							j);
 					// if the index of prime number is not ones to avoid
-#                   pragma omp flush(ret)
+#				pragma omp flush(ret)
 					if (!ret && found_sec == not2consider.end()) {
 						int s = (*primes)[j];
-//#                           pragma omp critical
 						if (sum == (f + s)) {
 							// found!
-#                           pragma omp flush(ret)
+#							pragma omp flush(ret)
 							ret = true;
 							first = f;
 							first_position = i;
@@ -275,7 +267,7 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 
 	bool ret = true;
 	for (unsigned int i = 0; i < matrix->size(); i++) {
-#       pragma omp flush(ret)
+#		pragma omp flush(ret)
 		if (ret) {
 			// test i-th column
 			if (look_for_couple_prime_with_condition(primes,
@@ -297,7 +289,7 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 				(*matrix)[1][i] = n1;
 				(*matrix)[2][i] = n2;
 			} else {
-#               pragma omp flush(ret)
+#				pragma omp flush(ret)
 				ret = false;
 			}
 		}
@@ -342,7 +334,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 
 #pragma omp parallel sections
 	{
-#   pragma omp section
+#		pragma omp section
 		{
 			// compute
 			(*matrix)[2][2] = sum - (*matrix)[0][0] - (*matrix)[1][1];
@@ -352,7 +344,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 				ret = false;
 		}
 
-#   pragma omp section
+#		pragma omp section
 		{
 			// compute
 			(*matrix)[2][1] = sum - (*matrix)[0][1] - (*matrix)[1][1];
@@ -362,7 +354,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 				ret = false;
 		}
 
-#   pragma omp section
+#		pragma omp section
 		{
 			// compute
 			(*matrix)[1][2] = sum - (*matrix)[0][2] - (*matrix)[2][2];
@@ -371,7 +363,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 				ret = false;
 		}
 
-#   pragma omp section
+#		pragma omp section
 		{
 			// compute
 			(*matrix)[1][0] = sum - (*matrix)[1][1] - (*matrix)[1][2];
@@ -380,7 +372,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 				ret = false;
 		}
 
-#   pragma omp section
+#		pragma omp section
 		{
 			// compute
 			(*matrix)[2][0] = sum - (*matrix)[2][1] - (*matrix)[2][2];
@@ -401,13 +393,13 @@ bool is_magic_square(ms_matrix *matrix) {
 	bool ret = true;
 
 	// test if all numbers are different from 0
-#   pragma omp parallel for default(none) shared(matrix, ret)
+#	pragma omp parallel for default(none) shared(matrix, ret)
 	for (unsigned int i = 0; i < matrix->size(); i++) {
-#       pragma omp flush(ret)
+#		pragma omp flush(ret)
 		if (ret) {
 			for (unsigned int j = 0; j < matrix->size(); j++) {
 				if ((*matrix)[i][j] < 1) {
-#                   pragma omp flush(ret)
+#					pragma omp flush(ret)
 					ret = false;
 				}
 			}
@@ -424,22 +416,20 @@ bool is_magic_square(ms_matrix *matrix) {
 
 	if (ret) {
 		// test rows and cols
-#   pragma omp parallel for default(none) shared(ret, matrix, sum)
+#		pragma omp parallel for default(none) shared(ret, matrix, sum)
 		for (int i = 0; i < 3; i++) {
-#           pragma omp flush(ret)
+#			pragma omp flush(ret)
 			if (ret) {
 				// test col
 				if (sum
 						!= ((*matrix)[i][0] + (*matrix)[i][1] + (*matrix)[i][2])) {
-					// TODO can I use atomic???
-#                   pragma omp flush(ret)
+#					pragma omp flush(ret)
 					ret = false;
 				}
 				// test row
 				if (sum
 						!= ((*matrix)[0][i] + (*matrix)[1][i] + (*matrix)[2][i])) {
-					// TODO can I use atomic???
-#                   pragma omp flush(ret)
+#					pragma omp flush(ret)
 					ret = false;
 				}
 			}
@@ -448,60 +438,6 @@ bool is_magic_square(ms_matrix *matrix) {
 
 	return ret;
 }
-
-///**
-// * In this approach the matrix elements are taken at random and
-// * repeating primes within the matrix is allowed.
-// *
-// * @param primes array of prime numbers
-// * @param matrix matrix of prime numbers generated
-// */
-//bool explorer_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
-//	fill_random_matrix(primes, matrix, seed);
-//	return is_magic_square(matrix);
-//}
-//
-///**
-// * In this approach only the central element is taken at random and
-// * the others are taken around him.
-// *
-// * @param primes array of prime numbers
-// * @param matrix matrix of prime numbers generated
-// */
-//bool consecutive_strategy(ms_vector *primes, ms_matrix *matrix, int seed) {
-//	fill_with_consecutive(primes, matrix, seed);
-//	return is_magic_square(matrix);
-//}
-//
-///**
-// * Heuristic strategy:
-// * In this approach, I select randomly the first column,
-// * then I look for the others cells as consequence of this selection.
-// *
-// * @param primes array of prime numbers
-// * @param matrix matrix of prime numbers generated
-// */
-//bool heuristic_strategy_1(ms_vector *primes, ms_matrix *matrix, int seed) {
-//	if (fill_in_heuristic_mode_1(primes, matrix, seed))
-//		return is_magic_square(matrix);
-//	return false;
-//}
-//
-///**
-// * Heuristic strategy:
-// * In this approach, I select randomly the first 4 numbers, then I look for
-// * the others cells as consequence of this selection.
-// * I have 8 equations and 9 variables.
-// * But, I need only 5 variables and the others can be calculated from those.
-// *
-// * @param primes array of prime numbers
-// * @param matrix matrix of prime numbers generated
-// */
-//bool heuristic_strategy_2(ms_vector *primes, ms_matrix *matrix, int seed) {
-//	if (fill_in_heuristic_mode_2(primes, matrix, seed))
-//		return is_magic_square(matrix);
-//	return false;
-//}
 
 /**
  * test first strategy: explorer_strategy() + print generated matrix
