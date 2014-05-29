@@ -30,7 +30,7 @@ void print_list_matrix(vector<ms_matrix> list);
  * @param matrix matrix to control
  * @return true, if the matrix is a magic square
  */
-bool is_magic_square(ms_matrix *matrix);
+bool is_magic_square(ms_matrix matrix);
 
 /**
  * Fill matrix with random selected prime numbers from primes.

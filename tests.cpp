@@ -101,28 +101,71 @@ void test_04(mpi::communicator world) {
 		matrix[2][2] = 67;
 
 		print_matrix(matrix);
-		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-		assert(is_magic_square(&matrix));
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(is_magic_square(matrix));
 
 		matrix[2][2] = 4;
 
 		print_matrix(matrix);
-		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-		assert(!is_magic_square(&matrix));
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(matrix));
 
 		matrix[2][2] = 67;
 		matrix[1][1] = 38;
 
 		print_matrix(matrix);
-		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-		assert(!is_magic_square(&matrix));
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(matrix));
 
 		matrix[1][1] = 36;
 		matrix[1][2] = 0;
 
 		print_matrix(matrix);
-		cout << (is_magic_square(&matrix) ? "yes" : "no") << endl;
-		assert(!is_magic_square(&matrix));
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(matrix));
+
+		matrix[0][0] = 39419;
+		matrix[0][1] = 66499;
+		matrix[0][2] = 69403;
+		matrix[1][0] = 35911;
+		matrix[1][1] = 99961;
+		matrix[1][2] = 6011;
+		matrix[2][0] = 99991;
+		matrix[2][1] = 8861;
+		matrix[2][2] = 99907;
+
+		print_matrix(matrix);
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(matrix));
+
+		matrix[0][0] = 33931;
+		matrix[0][1] = 49999;
+		matrix[0][2] = 11527;
+		matrix[1][0] = 7;
+		matrix[1][1] = 45439;
+		matrix[1][2] = 61;
+		matrix[2][0] = 61519;
+		matrix[2][1] = 19;
+		matrix[2][2] = 83869;
+
+		print_matrix(matrix);
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(matrix));
+
+		matrix[0][0] = 33931;
+		matrix[0][1] = 7;
+		matrix[0][2] = 61519;
+		matrix[1][0] = 49999;
+		matrix[1][1] = 45439;
+		matrix[1][2] = 19;
+		matrix[1][0] = 11527;
+		matrix[1][1] = 61;
+		matrix[1][2] = 83869;
+
+		print_matrix(matrix);
+		cout << (is_magic_square(matrix) ? "yes" : "no") << endl;
+		assert(!is_magic_square(matrix));
+
 	}
 	world.barrier();
 }
@@ -153,7 +196,7 @@ void test_05(mpi::communicator world, int limit) {
 	ms_matrix matrix(length, ms_vector(length));
 
 	fill_random_matrix(&primes, &matrix, rank);
-	if (is_magic_square(&matrix)) {
+	if (is_magic_square(matrix)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}
@@ -176,8 +219,8 @@ void test_06(mpi::communicator world, int limit) {
 		cout << "Generate a consecutive matrix and view...\n";
 	}
 
-		ms_vector primes;
-		find_prime_numbers(world, limit, &primes);
+	ms_vector primes;
+	find_prime_numbers(world, limit, &primes);
 
 	if (world.rank() == 0) {
 
@@ -215,7 +258,7 @@ void test_07(mpi::communicator world, int limit) {
 	ms_matrix matrix(length, ms_vector(length));
 
 	fill_with_consecutive(&primes, &matrix, rank);
-	if (is_magic_square(&matrix)) {
+	if (is_magic_square(matrix)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}
@@ -334,7 +377,7 @@ void test_09(mpi::communicator world, int limit) {
 	int length = 3;
 	ms_matrix matrix(length, ms_vector(length));
 
-	if (fill_in_heuristic_mode_1(&primes, &matrix, rank)) {
+	if (fill_in_heuristic_mode_1(&primes, &matrix, rank) && is_magic_square(matrix)) {
 		cout << "Found a magic square!\n";
 		print_matrix(matrix);
 	}
@@ -388,8 +431,8 @@ void test_11(mpi::communicator world, int limit) {
 		cout << "Test fill in heuristic strategy v2...\n";
 	}
 
-		ms_vector primes;
-		find_prime_numbers(world, limit, &primes);
+	ms_vector primes;
+	find_prime_numbers(world, limit, &primes);
 
 	if (world.rank() == 0) {
 		ms_matrix matrix(3, ms_vector(3));
@@ -455,16 +498,16 @@ int main(int argc, char *argv[]) {
 	test_02(world, 1000);
 	test_02(world, 10000);
 
-//	test_03(world);
-//	test_04(world);
-//	test_05(world, limit);
-//	test_06(world, limit);
-//	test_07(world, limit);
-//	test_08(world, limit);
-//	test_09(world, limit);
-//	test_10(world);
-//	test_11(world, limit);
-//	test_12(world, limit);
+	test_03(world);
+	test_04(world);
+	test_05(world, limit);
+	test_06(world, limit);
+	test_07(world, limit);
+	test_08(world, limit);
+	test_09(world, limit);
+	test_10(world);
+	test_11(world, limit);
+	test_12(world, limit);
 
 	return 0;
 }

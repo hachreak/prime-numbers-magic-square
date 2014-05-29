@@ -27,14 +27,12 @@
 #include <boost/serialization/vector.hpp>
 #include "magic-square.h"
 
-// http://en.wikipedia.org/wiki/Sieve_of_Atkin
-
 /**
  * Print a vector
  */
 void print_vector(ms_vector vector) {
 	for (ms_vector::iterator i = vector.begin(); i != vector.end(); i++) {
-		std::cout << *i << "\n";
+		std::cout << *i << "\t";
 	}
 	cout << endl;
 }
@@ -54,7 +52,7 @@ void print_matrix(ms_matrix matrix) {
 void print_list_matrix(vector<ms_matrix> list) {
 	// print all generated matrix
 	for (vector<ms_matrix>::iterator i = list.begin(); i != list.end(); i++) {
-		if (is_magic_square(&*i)) {
+		if (is_magic_square(*i)) {
 			cout << "Found a magic square!\n";
 		}
 		print_matrix(*i);
@@ -83,18 +81,19 @@ void is_prime2primes(vector<bool> is_prime, int limit, ms_vector *primes) {
 /**
  * find prime numbers in a range between [2,limit]
  * 
+ * http://en.wikipedia.org/wiki/Sieve_of_Atkin
+ *
  * @param limit upper limit
  * @param is_prime return a array[limit+1] with a representation of number (if is_prime[n] == true then n is prime, false otherwise)
  */
 void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 	int sqrt_limit = ceil(sqrt(limit));
+
 	vector<bool> is_prime(limit + 1, false);
 	vector<vector<bool> > matrix_is_prime(world.size());
 
-	//if (world.rank() == 0) {
-		is_prime[2] = true;
-		is_prime[3] = true;
-	//}
+	is_prime[2] = true;
+	is_prime[3] = true;
 
 	int size = world.size();
 	// if the number of process > sqrt_limit
@@ -110,25 +109,37 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 	// if stop is out of limit, set stop as limit
 	if (stop > limit)
 		stop = limit;
-//cout<<"start "<<start<<" stop "<<stop<<endl;
+
 	// execute algorithm
 	for (int x = start; x <= stop; x++) {
-//#		pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
+#		pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
 		for (int y = 1; y <= sqrt_limit; y++) {
 			int n = 4 * x * x + y * y;
 
-			if (n <= limit && ((n % 12) == 1 || (n % 12) == 5))
-				is_prime[n] = !is_prime[n];
+			if (n <= limit && ((n % 12) == 1 || (n % 12) == 5)){
+#				pragma omp critical
+				{
+					is_prime[n] = !is_prime[n];
+				}
+			}
 
 			n = 3 * x * x + y * y;
 
-			if (n <= limit && (n % 12) == 7)
-				is_prime[n] = !is_prime[n];
+			if (n <= limit && (n % 12) == 7){
+#				pragma omp critical
+				{
+					is_prime[n] = !is_prime[n];
+				}
+			}
 
 			n = 3 * x * x - y * y;
 
-			if (x > y && n <= limit && (n % 12) == 11)
-				is_prime[n] = !is_prime[n];
+			if (x > y && n <= limit && (n % 12) == 11){
+#				pragma omp critical
+				{
+					is_prime[n] = !is_prime[n];
+				}
+			}
 		}
 	}
 
@@ -139,29 +150,38 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 
 		// take the last update
 		for (unsigned int i = 1; i < matrix_is_prime.size(); i++) {
-//#			pragma omp parallel for default(none) shared(matrix_is_prime, limit, i)
+#			pragma omp parallel for default(none) shared(matrix_is_prime, limit, i)
 			for (int j = 1; j <= limit; j++) {
-				if (matrix_is_prime[i - 1][j])
-					matrix_is_prime[i][j] = !matrix_is_prime[i][j];
+				if (matrix_is_prime[i - 1][j]) {
+#					pragma omp critical
+					{
+						matrix_is_prime[i][j] = !matrix_is_prime[i][j];
+					}
+				}
 			}
 		}
 
 		// remove the others no prime numbers
-//#		pragma omp parallel for default(none) shared(sqrt_limit, matrix_is_prime, limit)
+		int index = matrix_is_prime.size() - 1;
+#		pragma omp parallel for default(none) shared(sqrt_limit, matrix_is_prime, limit, index)
 		for (int n = 5; n <= sqrt_limit; n++) {
-			if (matrix_is_prime[matrix_is_prime.size() - 1][n]) {
+			if (matrix_is_prime[index][n]) {
 				int k = n * n;
 				for (int i = k; i <= limit; i += k) {
-					matrix_is_prime[matrix_is_prime.size() - 1][i] = false;
+#					pragma omp critical
+					{
+						matrix_is_prime[index][i] = false;
+					}
 				}
 			}
 		}
 
 		// put number 2 and 3
-		if(!matrix_is_prime[matrix_is_prime.size() - 1][2]){
+		if (!matrix_is_prime[matrix_is_prime.size() - 1][2]) {
 			primes->push_back(2);
 			primes->push_back(3);
 		}
+
 		// convert the structure in a array with inside only the prime numbers
 		is_prime2primes(matrix_is_prime[matrix_is_prime.size() - 1], limit,
 				primes);
@@ -198,11 +218,10 @@ void fill_random_matrix(ms_vector *primes, ms_matrix *matrix, int seed) {
  */
 void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix,
 		int seed_random_num) {
-	// TODO fix random generator! T_T
 	srand(time(NULL) + rand() + seed_random_num);
 	int seed = (int) (rand() % primes->size());
 
-#pragma omp parallel sections
+#	pragma omp parallel sections
 	{
 #		pragma omp section
 		{
@@ -249,7 +268,7 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
 					found_sec = find(not2consider.begin(), not2consider.end(),
 							j);
 					// if the index of prime number is not ones to avoid
-#				pragma omp flush(ret)
+#					pragma omp flush(ret)
 					if (!ret && found_sec == not2consider.end()) {
 						int s = (*primes)[j];
 						if (sum == (f + s)) {
@@ -423,16 +442,16 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
  * @param matrix matrix to control
  * @return true, if the matrix is a magic square
  */
-bool is_magic_square(ms_matrix *matrix) {
+bool is_magic_square(ms_matrix matrix) {
 	bool ret = true;
 
 	// test if all numbers are different from 0
 #	pragma omp parallel for default(none) shared(matrix, ret)
-	for (unsigned int i = 0; i < matrix->size(); i++) {
+	for (unsigned int i = 0; i < matrix.size(); i++) {
 #		pragma omp flush(ret)
 		if (ret) {
-			for (unsigned int j = 0; j < matrix->size(); j++) {
-				if ((*matrix)[i][j] < 1) {
+			for (unsigned int j = 0; j < matrix.size(); j++) {
+				if (matrix[i][j] < 1) {
 #					pragma omp flush(ret)
 					ret = false;
 				}
@@ -444,8 +463,8 @@ bool is_magic_square(ms_matrix *matrix) {
 		return false;
 
 	// test diagonal
-	int sum = (*matrix)[0][0] + (*matrix)[1][1] + (*matrix)[2][2];
-	if (sum != ((*matrix)[2][0] + (*matrix)[1][1] + (*matrix)[0][2]))
+	int sum = matrix[0][0] + matrix[1][1] + matrix[2][2];
+	if (sum != (matrix[2][0] + matrix[1][1] + matrix[0][2]))
 		ret = false;
 
 	if (ret) {
@@ -456,13 +475,13 @@ bool is_magic_square(ms_matrix *matrix) {
 			if (ret) {
 				// test col
 				if (sum
-						!= ((*matrix)[i][0] + (*matrix)[i][1] + (*matrix)[i][2])) {
+						!= (matrix[i][0] + matrix[i][1] + matrix[i][2])) {
 #					pragma omp flush(ret)
 					ret = false;
 				}
 				// test row
 				if (sum
-						!= ((*matrix)[0][i] + (*matrix)[1][i] + (*matrix)[2][i])) {
+						!= (matrix[0][i] + matrix[1][i] + matrix[2][i])) {
 #					pragma omp flush(ret)
 					ret = false;
 				}
