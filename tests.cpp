@@ -39,9 +39,7 @@
 /**
  * transform is_prime to primes
  */
-void test_02(mpi::communicator world) {
-	int limit = 100;
-
+void test_02(mpi::communicator world, int limit) {
 	if (world.rank() == 0) {
 		cout << "Find prime numbers.... [2," << limit << "]\n";
 	}
@@ -453,17 +451,20 @@ int main(int argc, char *argv[]) {
 
 	int limit = 100000;
 
-	test_02(world);
-	test_03(world);
-	test_04(world);
-	test_05(world, limit);
-	test_06(world, limit);
-	test_07(world, limit);
-	test_08(world, limit);
-	test_09(world, limit);
-	test_10(world);
-	test_11(world, limit);
-	test_12(world, limit);
+	test_02(world, 100);
+	test_02(world, 1000);
+	test_02(world, 10000);
+
+//	test_03(world);
+//	test_04(world);
+//	test_05(world, limit);
+//	test_06(world, limit);
+//	test_07(world, limit);
+//	test_08(world, limit);
+//	test_09(world, limit);
+//	test_10(world);
+//	test_11(world, limit);
+//	test_12(world, limit);
 
 	return 0;
 }

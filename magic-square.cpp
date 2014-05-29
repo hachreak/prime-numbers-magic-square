@@ -34,7 +34,7 @@
  */
 void print_vector(ms_vector vector) {
 	for (ms_vector::iterator i = vector.begin(); i != vector.end(); i++) {
-		std::cout << *i << "\t";
+		std::cout << *i << "\n";
 	}
 	cout << endl;
 }
@@ -91,26 +91,29 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 	vector<bool> is_prime(limit + 1, false);
 	vector<vector<bool> > matrix_is_prime(world.size());
 
-	if (world.rank() == 0) {
-		// init vector
-#	pragma omp parallel for default(none) shared(limit, is_prime) schedule(static, 10)
-		for (int i = 0; i < (limit + 1); i++) {
-			is_prime[i] = false;
-		}
+	//if (world.rank() == 0) {
 		is_prime[2] = true;
 		is_prime[3] = true;
-	}
+	//}
 
-	// broadcast: send to all the vector is_prime
-	mpi::broadcast(world, is_prime, 0);
-
-	int howmuch = sqrt_limit / world.size();
+	int size = world.size();
+	// if the number of process > sqrt_limit
+	if (size > sqrt_limit)
+		// simulate to have sqrt_limit processes
+		size = sqrt_limit;
+	// compute how many numbers scan for each process
+	int howmuch = sqrt_limit / size;
+	// compute where the process start to look
 	int start = 1 + (howmuch * world.rank());
+	// compute where the process stop to look
 	int stop = howmuch * (world.rank() + 1);
-
+	// if stop is out of limit, set stop as limit
+	if (stop > limit)
+		stop = limit;
+//cout<<"start "<<start<<" stop "<<stop<<endl;
 	// execute algorithm
 	for (int x = start; x <= stop; x++) {
-#		pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
+//#		pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
 		for (int y = 1; y <= sqrt_limit; y++) {
 			int n = 4 * x * x + y * y;
 
@@ -136,7 +139,7 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 
 		// take the last update
 		for (unsigned int i = 1; i < matrix_is_prime.size(); i++) {
-#		pragma omp parallel for default(none) shared(matrix_is_prime, limit, i)
+//#			pragma omp parallel for default(none) shared(matrix_is_prime, limit, i)
 			for (int j = 1; j <= limit; j++) {
 				if (matrix_is_prime[i - 1][j])
 					matrix_is_prime[i][j] = !matrix_is_prime[i][j];
@@ -144,7 +147,7 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 		}
 
 		// remove the others no prime numbers
-#		pragma omp parallel for default(none) shared(sqrt_limit, matrix_is_prime, limit)
+//#		pragma omp parallel for default(none) shared(sqrt_limit, matrix_is_prime, limit)
 		for (int n = 5; n <= sqrt_limit; n++) {
 			if (matrix_is_prime[matrix_is_prime.size() - 1][n]) {
 				int k = n * n;
@@ -155,8 +158,10 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 		}
 
 		// put number 2 and 3
-		primes->push_back(2);
-		primes->push_back(3);
+		if(!matrix_is_prime[matrix_is_prime.size() - 1][2]){
+			primes->push_back(2);
+			primes->push_back(3);
+		}
 		// convert the structure in a array with inside only the prime numbers
 		is_prime2primes(matrix_is_prime[matrix_is_prime.size() - 1], limit,
 				primes);
