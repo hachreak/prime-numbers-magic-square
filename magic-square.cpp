@@ -91,7 +91,7 @@ void find_prime_numbers(int limit, ms_vector *primes) {
 	bool is_prime[limit + 1];
 
 	// init vector
-#	pragma omp parallel for default(none) shared(limit, is_prime)
+#	pragma omp parallel for default(none) shared(limit, is_prime) schedule(static, 10)
 	for (int i = 0; i < (limit + 1); i++) {
 		is_prime[i] = false;
 	}
