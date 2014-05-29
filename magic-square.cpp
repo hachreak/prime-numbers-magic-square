@@ -71,7 +71,7 @@ void print_list_matrix(vector<ms_matrix> list) {
  * @param limit the size of array is_prime
  * @param primes the output array
  */
-void is_prime2primes(bool *is_prime, int limit, ms_vector *primes) {
+void is_prime2primes(vector<bool> is_prime, int limit, ms_vector *primes) {
 	// get all prime numbers preserving the order
 	for (int n = 0; n <= limit; n++) {
 		if (is_prime[n]) {
@@ -86,20 +86,30 @@ void is_prime2primes(bool *is_prime, int limit, ms_vector *primes) {
  * @param limit upper limit
  * @param is_prime return a array[limit+1] with a representation of number (if is_prime[n] == true then n is prime, false otherwise)
  */
-void find_prime_numbers(int limit, ms_vector *primes) {
+void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 	int sqrt_limit = ceil(sqrt(limit));
-	bool is_prime[limit + 1];
+	vector<bool> is_prime(limit + 1, false);
+	vector<vector<bool> > matrix_is_prime(world.size());
 
-	// init vector
+	if (world.rank() == 0) {
+		// init vector
 #	pragma omp parallel for default(none) shared(limit, is_prime) schedule(static, 10)
-	for (int i = 0; i < (limit + 1); i++) {
-		is_prime[i] = false;
+		for (int i = 0; i < (limit + 1); i++) {
+			is_prime[i] = false;
+		}
+		is_prime[2] = true;
+		is_prime[3] = true;
 	}
-	is_prime[2] = true;
-	is_prime[3] = true;
+
+	// broadcast: send to all the vector is_prime
+	mpi::broadcast(world, is_prime, 0);
+
+	int howmuch = sqrt_limit / world.size();
+	int start = 1 + (howmuch * world.rank());
+	int stop = howmuch * (world.rank() + 1);
 
 	// execute algorithm
-	for (int x = 1; x <= sqrt_limit; x++) {
+	for (int x = start; x <= stop; x++) {
 #		pragma omp parallel for default(none) shared(sqrt_limit, limit, is_prime, x)
 		for (int y = 1; y <= sqrt_limit; y++) {
 			int n = 4 * x * x + y * y;
@@ -119,19 +129,38 @@ void find_prime_numbers(int limit, ms_vector *primes) {
 		}
 	}
 
-	// remove the no prime numbers
-#	pragma omp parallel for default(none) shared(sqrt_limit, is_prime, limit)
-	for (int n = 5; n <= sqrt_limit; n++) {
-		if (is_prime[n]) {
-			int k = n * n;
-			for (int i = k; i <= limit; i += k) {
-				is_prime[i] = false;
+	// gather: receive all generated matrix
+	mpi::gather(world, is_prime, matrix_is_prime, 0);
+
+	if (world.rank() == 0) {
+
+		// take the last update
+		for (unsigned int i = 1; i < matrix_is_prime.size(); i++) {
+#		pragma omp parallel for default(none) shared(matrix_is_prime, limit, i)
+			for (int j = 1; j <= limit; j++) {
+				if (matrix_is_prime[i - 1][j])
+					matrix_is_prime[i][j] = !matrix_is_prime[i][j];
 			}
 		}
-	}
 
-	// convert the structure in a array with inside only the prime numbers
-	is_prime2primes(is_prime, limit, primes);
+		// remove the others no prime numbers
+#		pragma omp parallel for default(none) shared(sqrt_limit, matrix_is_prime, limit)
+		for (int n = 5; n <= sqrt_limit; n++) {
+			if (matrix_is_prime[matrix_is_prime.size() - 1][n]) {
+				int k = n * n;
+				for (int i = k; i <= limit; i += k) {
+					matrix_is_prime[matrix_is_prime.size() - 1][i] = false;
+				}
+			}
+		}
+
+		// put number 2 and 3
+		primes->push_back(2);
+		primes->push_back(3);
+		// convert the structure in a array with inside only the prime numbers
+		is_prime2primes(matrix_is_prime[matrix_is_prime.size() - 1], limit,
+				primes);
+	}
 }
 
 /**
@@ -453,10 +482,10 @@ void test_explorer_strategy(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the Explorer strategy...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -490,10 +519,10 @@ void test_consecutive_strategy(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the Consecutive strategy...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -529,10 +558,10 @@ void test_heuristic_strategy_1(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the heuristic strategy...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -571,10 +600,10 @@ void test_heuristic_strategy_2(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the heuristic strategy 2...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);

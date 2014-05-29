@@ -28,7 +28,7 @@
 //	//
 //	int limit = 100;
 //
-//	find_prime_numbers(limit, is_prime);
+//	find_prime_numbers(world, limit, is_prime);
 //	//cout<<sizeof(is_prime);exit(0);
 //	for (int n = 0; n <= limit; n++) {
 //		if (is_prime[n])
@@ -40,12 +40,16 @@
  * transform is_prime to primes
  */
 void test_02(mpi::communicator world) {
-	if (world.rank() == 0) {
-		int limit = 100;
-		cout << "Find prime numbers.... [2," << limit << "]\n";
-		ms_vector primes;
-		find_prime_numbers(limit, &primes);
+	int limit = 100;
 
+	if (world.rank() == 0) {
+		cout << "Find prime numbers.... [2," << limit << "]\n";
+	}
+
+	ms_vector primes;
+	find_prime_numbers(world, limit, &primes);
+
+	if (world.rank() == 0) {
 		print_vector(primes);
 		cout << "\n";
 	}
@@ -58,10 +62,13 @@ void test_02(mpi::communicator world) {
 void test_03(mpi::communicator world) {
 	if (world.rank() == 0) {
 		cout << "Fill a matrix with random prime numbers...\n";
-		int limit = 100;
-		ms_vector primes;
-		find_prime_numbers(limit, &primes);
+	}
 
+	int limit = 100;
+	ms_vector primes;
+	find_prime_numbers(world, limit, &primes);
+
+	if (world.rank() == 0) {
 		int length = 3;
 
 		ms_matrix matrix(length, ms_vector(length));
@@ -136,10 +143,10 @@ void test_05(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the Explorer strategy...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -169,8 +176,12 @@ void test_05(mpi::communicator world, int limit) {
 void test_06(mpi::communicator world, int limit) {
 	if (world.rank() == 0) {
 		cout << "Generate a consecutive matrix and view...\n";
+	}
+
 		ms_vector primes;
-		find_prime_numbers(limit, &primes);
+		find_prime_numbers(world, limit, &primes);
+
+	if (world.rank() == 0) {
 
 		int length = 3;
 		ms_matrix matrix(length, ms_vector(length));
@@ -194,10 +205,10 @@ void test_07(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the Consecutive strategy...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -234,8 +245,9 @@ void test_08(mpi::communicator world, int limit) {
 	if (world.rank() == 0) {
 		cout
 				<< "Test if found a trio of prime numbers that satisfy the condition A+B+C=SUM, where you know A and SUM...\n";
-		find_prime_numbers(limit, &primes);
 	}
+
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -313,10 +325,10 @@ void test_09(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the heuristic strategy...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -348,15 +360,18 @@ void test_10(mpi::communicator world) {
 
 	if (world.rank() == 0) {
 		cout << "Test broadcasting...\n";
+	}
 
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
+
+	if (world.rank() == 0) {
 
 		print_vector(primes);
-
-		// vector to collecting all generated matrix
-		vector<ms_matrix> list;
 	}
+
+	// vector to collecting all generated matrix
+	vector<ms_matrix> list;
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);
@@ -368,20 +383,20 @@ void test_10(mpi::communicator world) {
 }
 
 /**
- * Test fill a matrix with heu
+ * Test fill a matrix with heuristic strategy
  */
 void test_11(mpi::communicator world, int limit) {
 	if (world.rank() == 0) {
-		int seed = 1;
-
 		cout << "Test fill in heuristic strategy v2...\n";
+	}
 
 		ms_vector primes;
-		find_prime_numbers(limit, &primes);
+		find_prime_numbers(world, limit, &primes);
 
+	if (world.rank() == 0) {
 		ms_matrix matrix(3, ms_vector(3));
 
-		fill_in_heuristic_mode_2(&primes, &matrix, seed);
+		fill_in_heuristic_mode_2(&primes, &matrix, world.rank());
 
 		print_matrix(matrix);
 	}
@@ -406,10 +421,10 @@ void test_12(mpi::communicator world, int limit) {
 
 	if (rank == 0) {
 		cout << "Test the heuristic strategy 2...\n";
-
-		// generate primes numbers
-		find_prime_numbers(limit, &primes);
 	}
+
+	// generate primes numbers
+	find_prime_numbers(world, limit, &primes);
 
 	// send to all the prime numbers
 	mpi::broadcast(world, primes, 0);

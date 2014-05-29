@@ -93,7 +93,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed);
  * @param limit upper limit
  * @param is_prime return a array[limit+1] with a representation of number (if is_prime[n] == true then n is prime, false otherwise)
  */
-void find_prime_numbers(int limit, ms_vector *primes);
+void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes);
 
 /**
  * test first strategy: explorer_strategy() + print generated matrix
