@@ -146,6 +146,7 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
 	// gather: receive all generated matrix
 	mpi::gather(world, is_prime, matrix_is_prime, 0);
 
+	// rott process finalize the algorithm
 	if (world.rank() == 0) {
 
 		// take the last update
@@ -195,7 +196,6 @@ void find_prime_numbers(mpi::communicator world, int limit, ms_vector *primes) {
  */
 void fill_random_matrix(ms_vector *primes, ms_matrix *matrix, int seed) {
 	// init random generator
-	// TODO fix random generator! T_T
 //	std::default_random_engine generator;
 //	std::uniform_real_distribution<double> distribution(0.0, primes->size());
 	srand(time(NULL) + rand() + seed);
@@ -218,9 +218,11 @@ void fill_random_matrix(ms_vector *primes, ms_matrix *matrix, int seed) {
  */
 void fill_with_consecutive(ms_vector *primes, ms_matrix *matrix,
 		int seed_random_num) {
+	// init random generator
 	srand(time(NULL) + rand() + seed_random_num);
 	int seed = (int) (rand() % primes->size());
 
+	// parallelize setting
 #	pragma omp parallel sections
 	{
 #		pragma omp section
@@ -261,7 +263,10 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
 					not2consider.end(), i);
 			// if the index of prime number is not ones to avoid
 			if (found_first == not2consider.end()) {
+				// first prime number selected
 				int f = (*primes)[i];
+
+				// look for the second prime number
 #				pragma omp parallel for default(none) shared(f, size, not2consider, ret, primes, sum, first, first_position, second, second_position, i)
 				for (int j = 0; j < size; j++) {
 					ms_vector::iterator found_sec;
@@ -270,7 +275,10 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
 					// if the index of prime number is not ones to avoid
 #					pragma omp flush(ret)
 					if (!ret && found_sec == not2consider.end()) {
+						// second prime number selected
 						int s = (*primes)[j];
+
+						// if the sum correspond
 						if (sum == (f + s)) {
 							// found!
 #							pragma omp flush(ret)
@@ -285,6 +293,7 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
 			}
 		}
 	}
+
 	return ret;
 }
 
@@ -294,7 +303,7 @@ bool look_for_couple_prime_with_condition(ms_vector *primes, int sum,
  * @param matrix matrix to fill
  */
 bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
-	// TODO fix random generator! T_T
+	// init random generator
 	srand(time(NULL) + rand() + seed);
 
 	// select randomly first 3 prime numbers
@@ -310,8 +319,8 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 	// compute the sum
 	int sum = (*matrix)[0][0] + (*matrix)[0][1] + (*matrix)[0][2];
 
-	vector<int> not2consider;
 	// list of index of prime numbers not to be considered in search
+	vector<int> not2consider;
 	not2consider.push_back(seed_00);
 	not2consider.push_back(seed_01);
 	not2consider.push_back(seed_02);
@@ -319,13 +328,15 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
 	int first, first_position, second, second_position;
 
 	bool ret = true;
+	// fill each cell
 	for (unsigned int i = 0; i < matrix->size(); i++) {
 #		pragma omp flush(ret)
 		if (ret) {
-			// test i-th column
+			// test i-th column: look for a couple of numbers
 			if (look_for_couple_prime_with_condition(primes,
 					sum - (*matrix)[0][i], not2consider, first, first_position,
 					second, second_position)) {
+
 				// save position of founded prime numbers
 				not2consider.push_back(first_position);
 				not2consider.push_back(second_position);
@@ -357,25 +368,25 @@ bool fill_in_heuristic_mode_1(ms_vector *primes, ms_matrix *matrix, int seed) {
  * @param matrix matrix to fill
  */
 bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
-	// TODO fix random generator! T_T
+	// init random generator
 	srand(time(NULL) + rand() + seed);
 
-	// select randomly  prime number
+	// select randomly a prime number
 	int seed_00 = (int) (rand() % primes->size());
 	// save in matrix
 	(*matrix)[0][0] = (*primes)[seed_00];
 
-	// select randomly  prime number
+	// select randomly a prime number
 	int seed_01 = (int) (rand() % primes->size());
 	// save in matrix
 	(*matrix)[0][1] = (*primes)[seed_01];
 
-	// select randomly  prime number
+	// select randomly a prime number
 	int seed_02 = (int) (rand() % primes->size());
 	// save in matrix
 	(*matrix)[0][2] = (*primes)[seed_02];
 
-	// select randomly  prime number
+	// select randomly a prime number
 	int seed_11 = (int) (rand() % primes->size());
 	// save in matrix
 	(*matrix)[1][1] = (*primes)[seed_11];
@@ -385,7 +396,7 @@ bool fill_in_heuristic_mode_2(ms_vector *primes, ms_matrix *matrix, int seed) {
 
 	bool ret = true;
 
-#pragma omp parallel sections
+#	pragma omp parallel sections
 	{
 #		pragma omp section
 		{

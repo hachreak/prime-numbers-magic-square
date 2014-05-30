@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
 
 	select_strategy(world, limit, 1);
 	select_strategy(world, limit, 2);
-	// slowly strategy! XD
+	// disabled... slow strategy! XD
 	//select_strategy(world, limit, 3);
 	select_strategy(world, limit, 4);
 
